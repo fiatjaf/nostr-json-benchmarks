@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	fflib "github.com/pquerna/ffjson/fflib/v1"
 )
@@ -24,7 +25,7 @@ func (j *Event) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	buf.WriteString(`{"kind":`)
 	fflib.FormatBits2(buf, uint64(j.Kind), 10, j.Kind < 0)
 	buf.WriteString(`,"created_at":`)
-	fflib.FormatBits2(buf, uint64(j.CreatedAt), 10, j.CreatedAt < 0)
+	fflib.FormatBits2(buf, uint64(j.CreatedAt.Unix()), 10, false)
 	buf.WriteString(`,"content":`)
 	fflib.WriteJsonString(buf, string(j.Content))
 	buf.WriteString(`,"pubkey":`)
@@ -344,7 +345,7 @@ handle_CreatedAt:
 				return fs.WrapErr(err)
 			}
 
-			j.CreatedAt = int64(tval)
+			j.CreatedAt = time.Unix(tval, 0)
 
 		}
 	}

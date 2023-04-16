@@ -123,7 +123,7 @@ func (l *MegaLazyEventSonic) Sig() string {
 }
 
 type NotLazyEventSonic struct {
-	embedded GoNostrEvent
+	embedded Event
 }
 
 func (l *NotLazyEventSonic) Kind() int {

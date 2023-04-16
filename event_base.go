@@ -6,13 +6,13 @@ import (
 )
 
 type Event struct {
-	Kind      int    `json:"kind"`
-	CreatedAt int64  `json:"created_at"`
-	Content   string `json:"content"`
-	PubKey    string `json:"pubkey"`
-	Sig       string `json:"sig"`
-	ID        string `json:"id"`
-	Tags      Tags   `json:"tags"`
+	Kind      int       `json:"kind"`
+	CreatedAt time.Time `json:"created_at"`
+	Content   string    `json:"content"`
+	PubKey    string    `json:"pubkey"`
+	Sig       string    `json:"sig"`
+	ID        string    `json:"id"`
+	Tags      Tags      `json:"tags"`
 }
 
 func (e Event) String() string {
@@ -34,19 +34,6 @@ type LazyEvent interface {
 	Sig() string
 	ID() string
 	// Tags() [][]string
-}
-
-// TODO
-type LazyTag interface{}
-
-type GoNostrEvent struct {
-	ID        string    `json:"id"`
-	PubKey    string    `json:"pubkey"`
-	CreatedAt time.Time `json:"created_at"`
-	Kind      int       `json:"kind"`
-	Tags      Tags      `json:"tags"`
-	Content   string    `json:"content"`
-	Sig       string    `json:"sig"`
 }
 
 type (

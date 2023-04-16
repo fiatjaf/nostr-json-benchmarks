@@ -245,16 +245,7 @@ func BenchmarkLazyEvent(b *testing.B) {
 					for _, evtstr := range events {
 						var event Event
 						sonic.UnmarshalString(evtstr, &event)
-						emb := GoNostrEvent{
-							ID:        event.ID,
-							Content:   event.Content,
-							Kind:      event.Kind,
-							PubKey:    event.PubKey,
-							Sig:       event.Sig,
-							Tags:      event.Tags,
-							CreatedAt: time.Unix(event.CreatedAt, 0),
-						}
-						l := &NotLazyEventSonic{embedded: emb}
+						l := &NotLazyEventSonic{embedded: event}
 						doStuff(l)
 					}
 				}
@@ -301,7 +292,7 @@ func BenchmarkFullEvent(b *testing.B) {
 				v := gjson.Parse(evtstr)
 				event.Kind = int(v.Get("kind").Int())
 				event.Content = v.Get("content").String()
-				event.CreatedAt = v.Get("created_at").Int()
+				event.CreatedAt = time.Unix(v.Get("created_at").Int(), 0)
 				event.PubKey = v.Get("pubkey").String()
 				v.Get("tags").ForEach(func(_, v gjson.Result) bool {
 					tag := make([]string, 0, 4)
@@ -349,7 +340,8 @@ func BenchmarkFullEvent(b *testing.B) {
 				kind, _ := jsonparser.GetInt(b, "kind")
 				event.Kind = int(kind)
 				event.Content, _ = jsonparser.GetString(b, "content")
-				event.CreatedAt, _ = jsonparser.GetInt(b, "created_at")
+				ts, _ := jsonparser.GetInt(b, "created_at")
+				event.CreatedAt = time.Unix(ts, 0)
 				event.PubKey, _ = jsonparser.GetUnsafeString(b, "pubkey")
 				jsonparser.ArrayEach(b, func(tagb []byte, _ jsonparser.ValueType, _ int, _ error) {
 					tag := make([]string, 0, 5)
@@ -430,6 +422,11 @@ func BenchmarkFullEvent(b *testing.B) {
 
 func BenchmarkGoNostrEventTyped(b *testing.B) {
 	sonic.Pretouch(reflect.TypeOf(Event{}))
+	api := sonic.Config{
+		NoQuoteTextMarshaler: true,
+		UseInt64:             true,
+		NoNullSliceOrMap:     true,
+	}.Froze()
 	events := loadEvents()
 
 	b.Run("go-nostr (fastjson)", func(b *testing.B) {
@@ -441,20 +438,11 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 		}
 	})
 
-	b.Run("sonic roundabout", func(b *testing.B) {
+	b.Run("sonic", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				var event Event
-				sonic.UnmarshalString(evtstr, &event)
-				_ = GoNostrEvent{
-					ID:        event.ID,
-					Content:   event.Content,
-					Kind:      event.Kind,
-					PubKey:    event.PubKey,
-					Sig:       event.Sig,
-					Tags:      event.Tags,
-					CreatedAt: time.Unix(event.CreatedAt, 0),
-				}
+				api.UnmarshalFromString(evtstr, &event)
 			}
 		}
 	})
@@ -463,7 +451,7 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				s := ast.NewSearcher(evtstr)
-				evt := GoNostrEvent{}
+				evt := Event{}
 				id, _ := s.GetByPath("id")
 				evt.ID, _ = id.StrictString()
 				pubkey, _ := s.GetByPath("pubkey")
@@ -492,6 +480,225 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 			}
 		}
 	})
+
+	b.Run("easyjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				var event Event
+				easyjson.Unmarshal([]byte(evtstr), &event)
+			}
+		}
+	})
+}
+
+func BenchmarkEnvelope(b *testing.B) {
+	sonic.Pretouch(reflect.TypeOf(Event{}))
+	api := sonic.Config{
+		NoQuoteTextMarshaler: true,
+		UseInt64:             true,
+		NoNullSliceOrMap:     true,
+	}.Froze()
+	lines := loadLines()
+
+	b.Run("json.Unmarshal", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				env := make([]json.RawMessage, 0, 4)
+				json.Unmarshal([]byte(line), &env)
+				if len(env) == 0 {
+					continue
+				}
+				var typ string
+				json.Unmarshal(env[0], &typ)
+				switch typ {
+				case "EVENT":
+					if len(env) != 2 {
+						continue
+					}
+					var sub string
+					json.Unmarshal(env[1], &sub)
+					var evt Event
+					json.Unmarshal(env[2], &evt)
+				case "OK":
+					if len(env) < 3 {
+						continue
+					}
+					var id string
+					var ok bool
+					json.Unmarshal(env[1], &id)
+					json.Unmarshal(env[2], &ok)
+					if len(env) > 3 {
+						var msg string
+						json.Unmarshal(env[3], &msg)
+					}
+				case "EOSE":
+					if len(env) != 2 {
+						continue
+					}
+					var sub string
+					json.Unmarshal(env[1], &sub)
+				case "NOTICE":
+					if len(env) != 2 {
+						continue
+					}
+					var msg string
+					json.Unmarshal(env[1], &msg)
+				}
+			}
+		}
+	})
+
+	b.Run("go-nostr (fastjson)", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				env := make([]json.RawMessage, 0, 4)
+				json.Unmarshal([]byte(line), &env)
+				if len(env) == 0 {
+					continue
+				}
+				var typ string
+				json.Unmarshal(env[0], &typ)
+				switch typ {
+				case "EVENT":
+					if len(env) != 2 {
+						continue
+					}
+					var sub string
+					json.Unmarshal(env[1], &sub)
+					var evt nostr.Event
+					json.Unmarshal(env[2], &evt)
+				case "OK":
+					if len(env) < 3 {
+						continue
+					}
+					var id string
+					var ok bool
+					json.Unmarshal(env[1], &id)
+					json.Unmarshal(env[2], &ok)
+					if len(env) > 3 {
+						var msg string
+						json.Unmarshal(env[3], &msg)
+					}
+				case "EOSE":
+					if len(env) != 2 {
+						continue
+					}
+					var sub string
+					json.Unmarshal(env[1], &sub)
+				case "NOTICE":
+					if len(env) != 2 {
+						continue
+					}
+					var msg string
+					json.Unmarshal(env[1], &msg)
+				}
+			}
+		}
+	})
+
+	b.Run("sonic", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				s := ast.NewSearcher(line)
+				first, _ := s.GetByPath(0)
+
+				cmd, _ := first.StrictString()
+
+				switch cmd {
+				case "EVENT":
+					subv, _ := s.GetByPath(1)
+					subv.StrictString()
+					evtv, _ := s.GetByPath(2)
+					var evt Event
+					raw, _ := evtv.Raw()
+					api.UnmarshalFromString(raw, &evt)
+				case "OK":
+					idv, _ := s.GetByPath(1)
+					okv, _ := s.GetByPath(2)
+					msgv, _ := s.GetByPath(3)
+					idv.StrictString()
+					okv.Bool()
+					msgv.StrictString()
+				case "EOSE":
+					subv, _ := s.GetByPath(1)
+					subv.StrictString()
+				case "NOTICE":
+					msgv, _ := s.GetByPath(1)
+					msgv.StrictString()
+				}
+			}
+		}
+	})
+
+	b.Run("easyjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				env := make([]json.RawMessage, 0, 4)
+				json.Unmarshal([]byte(line), &env)
+				if len(env) == 0 {
+					continue
+				}
+				var typ string
+				json.Unmarshal(env[0], &typ)
+				switch typ {
+				case "EVENT":
+					if len(env) != 2 {
+						continue
+					}
+					var sub string
+					json.Unmarshal(env[1], &sub)
+					var event Event
+					easyjson.Unmarshal(env[2], &event)
+				case "OK":
+					if len(env) < 3 {
+						continue
+					}
+					var id string
+					var ok bool
+					json.Unmarshal(env[1], &id)
+					json.Unmarshal(env[2], &ok)
+					if len(env) > 3 {
+						var msg string
+						json.Unmarshal(env[3], &msg)
+					}
+				case "EOSE":
+					if len(env) != 2 {
+						continue
+					}
+					var sub string
+					json.Unmarshal(env[1], &sub)
+				case "NOTICE":
+					if len(env) != 2 {
+						continue
+					}
+					var msg string
+					json.Unmarshal(env[1], &msg)
+				}
+			}
+		}
+	})
+
+	b.Run("gjson + easyjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				v := gjson.Parse(line)
+				switch v.Get("0").Str {
+				case "EVENT":
+					_ = v.Get("1").Str
+					var event Event
+					easyjson.Unmarshal([]byte(v.Get("2").Raw), &event)
+				case "OK":
+					_ = v.Get("1").Str
+					_ = v.Get("2").Bool()
+					_ = v.Get("3").Str
+				case "EOSE":
+					_ = v.Get("1").Str
+				case "NOTICE":
+					_ = v.Get("1").Str
+				}
+			}
+		}
+	})
 }
 
 func loadLines() []string {
@@ -507,10 +714,13 @@ func loadLines() []string {
 
 func loadEvents() []string {
 	lines := loadLines()
+	events := make([]string, 0, len(lines))
 
-	for i, line := range lines {
-		lines[i] = line[13 : len(line)-1]
+	for _, line := range lines {
+		if strings.HasPrefix(line, "[\"EVENT") {
+			events = append(events, line[13:len(line)-1])
+		}
 	}
 
-	return lines
+	return events
 }
