@@ -432,7 +432,16 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 	sonic.Pretouch(reflect.TypeOf(Event{}))
 	events := loadEvents()
 
-	b.Run("sonic", func(b *testing.B) {
+	b.Run("go-nostr (fastjson)", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				var event nostr.Event
+				json.Unmarshal([]byte(evtstr), &event)
+			}
+		}
+	})
+
+	b.Run("sonic roundabout", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				var event Event
@@ -450,11 +459,36 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 		}
 	})
 
-	b.Run("go-nostr (fastjson)", func(b *testing.B) {
+	b.Run("sonic/searcher/get", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
-				var event nostr.Event
-				json.Unmarshal([]byte(evtstr), &event)
+				s := ast.NewSearcher(evtstr)
+				evt := GoNostrEvent{}
+				id, _ := s.GetByPath("id")
+				evt.ID, _ = id.StrictString()
+				pubkey, _ := s.GetByPath("pubkey")
+				evt.PubKey, _ = pubkey.StrictString()
+				sig, _ := s.GetByPath("sig")
+				evt.Sig, _ = sig.StrictString()
+				createdAt, _ := s.GetByPath("created_at")
+				createdAtInt64, _ := createdAt.StrictInt64()
+				evt.CreatedAt = time.Unix(createdAtInt64, 0)
+				content, _ := s.GetByPath("content")
+				evt.Content, _ = content.StrictString()
+				tagsv, _ := s.GetByPath("tags")
+				evt.Tags = make(Tags, 0, 15)
+				for i := 0; i < 40; i++ {
+					tagv := tagsv.Index(i)
+					if tagv.Exists() {
+						tag := make(Tag, 0, 10)
+						for j := 0; j < 10; j++ {
+							itemv := tagv.Index(j)
+							v, _ := itemv.StrictString()
+							tag = append(tag, v)
+						}
+						evt.Tags = append(evt.Tags, tag)
+					}
+				}
 			}
 		}
 	})
