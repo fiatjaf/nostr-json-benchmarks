@@ -3,6 +3,7 @@ package benchmarks
 import (
 	"encoding/json"
 	"io/ioutil"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -20,6 +21,7 @@ import (
 // for each event we want to print the content, pubkey and timestamp
 
 func BenchmarkShortEvent(b *testing.B) {
+	sonic.Pretouch(reflect.TypeOf(EventShort{}))
 	events := loadEvents()
 
 	b.Run("json.Unmarshal", func(b *testing.B) {
@@ -97,7 +99,7 @@ func BenchmarkShortEvent(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				var event EventShort
-				sonic.Unmarshal([]byte(evtstr), &event)
+				sonic.UnmarshalString(evtstr, &event)
 			}
 		}
 	})
@@ -131,6 +133,7 @@ func BenchmarkShortEvent(b *testing.B) {
 }
 
 func BenchmarkFullEvent(b *testing.B) {
+	sonic.Pretouch(reflect.TypeOf(Event{}))
 	events := loadEvents()
 
 	b.Run("json.Unmarshal", func(b *testing.B) {
@@ -297,7 +300,7 @@ func BenchmarkFullEvent(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				var event Event
-				sonic.Unmarshal([]byte(evtstr), &event)
+				sonic.UnmarshalString(evtstr, &event)
 			}
 		}
 	})
