@@ -2,10 +2,12 @@ package benchmarks
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/buger/jsonparser"
 	"github.com/bytedance/sonic"
@@ -132,6 +134,135 @@ func BenchmarkShortEvent(b *testing.B) {
 	})
 }
 
+func BenchmarkLazyEvent(b *testing.B) {
+	events := loadEvents()
+
+	doStuff1 := func(l LazyEvent) {
+		l.ID()
+		l.Content()
+		l.PubKey()
+	}
+
+	doStuff2 := func(l LazyEvent) {
+		l.Content()
+		l.Content()
+		l.Content()
+		l.Content()
+		l.CreatedAt().Unix()
+		l.CreatedAt().Unix()
+		l.PubKey()
+		l.PubKey()
+		l.PubKey()
+		l.PubKey()
+	}
+
+	doStuff3 := func(l LazyEvent) {
+		l.Content()
+		l.Content()
+		l.ID()
+		l.Content()
+		l.Content()
+		l.CreatedAt().Unix()
+		l.CreatedAt().Unix()
+		l.PubKey()
+		l.PubKey()
+		l.ID()
+		l.PubKey()
+		l.Content()
+		l.Content()
+		l.ID()
+		l.Content()
+		l.Content()
+		l.CreatedAt().Unix()
+		l.CreatedAt().Unix()
+		l.PubKey()
+		l.PubKey()
+		l.ID()
+		l.PubKey()
+		l.ID()
+		l.PubKey()
+		l.PubKey()
+	}
+
+	actions := []func(LazyEvent){doStuff1, doStuff2, doStuff3}
+
+	b.Run("gjson", func(b *testing.B) {
+		for i, doStuff := range actions {
+			b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					for _, evtstr := range events {
+						l := &LazyEventGJSON{v: gjson.Parse(evtstr)}
+						doStuff(l)
+					}
+				}
+			})
+		}
+	})
+
+	b.Run("gjson-megalazy", func(b *testing.B) {
+		for i, doStuff := range actions {
+			b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					for _, evtstr := range events {
+						l := &LazyEventGJSON{v: gjson.Parse(evtstr)}
+						doStuff(l)
+					}
+				}
+			})
+		}
+	})
+
+	b.Run("sonic", func(b *testing.B) {
+		for i, doStuff := range actions {
+			b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					for _, evtstr := range events {
+						l := &LazyEventSonic{searcher: ast.NewSearcher(evtstr)}
+						doStuff(l)
+					}
+				}
+			})
+		}
+	})
+
+	b.Run("sonic-megalazy", func(b *testing.B) {
+		for i, doStuff := range actions {
+			b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					for _, evtstr := range events {
+						l := &MegaLazyEventSonic{searcher: ast.NewSearcher(evtstr)}
+						doStuff(l)
+					}
+				}
+			})
+		}
+	})
+
+	b.Run("sonic-not-lazy", func(b *testing.B) {
+		for i, doStuff := range actions {
+			b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					for _, evtstr := range events {
+						var event Event
+						sonic.UnmarshalString(evtstr, &event)
+						emb := GoNostrEvent{
+							ID:        event.ID,
+							Content:   event.Content,
+							Kind:      event.Kind,
+							PubKey:    event.PubKey,
+							Sig:       event.Sig,
+							Tags:      event.Tags,
+							CreatedAt: time.Unix(event.CreatedAt, 0),
+						}
+						l := &NotLazyEventSonic{embedded: emb}
+						doStuff(l)
+					}
+				}
+			})
+		}
+	})
+}
+
 func BenchmarkFullEvent(b *testing.B) {
 	sonic.Pretouch(reflect.TypeOf(Event{}))
 	events := loadEvents()
@@ -140,15 +271,6 @@ func BenchmarkFullEvent(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				var event EventShort
-				json.Unmarshal([]byte(evtstr), &event)
-			}
-		}
-	})
-
-	b.Run("go-nostr (fastjson)", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			for _, evtstr := range events {
-				var event nostr.Event
 				json.Unmarshal([]byte(evtstr), &event)
 			}
 		}
@@ -301,6 +423,38 @@ func BenchmarkFullEvent(b *testing.B) {
 			for _, evtstr := range events {
 				var event Event
 				sonic.UnmarshalString(evtstr, &event)
+			}
+		}
+	})
+}
+
+func BenchmarkGoNostrEventTyped(b *testing.B) {
+	sonic.Pretouch(reflect.TypeOf(Event{}))
+	events := loadEvents()
+
+	b.Run("sonic", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				var event Event
+				sonic.UnmarshalString(evtstr, &event)
+				_ = GoNostrEvent{
+					ID:        event.ID,
+					Content:   event.Content,
+					Kind:      event.Kind,
+					PubKey:    event.PubKey,
+					Sig:       event.Sig,
+					Tags:      event.Tags,
+					CreatedAt: time.Unix(event.CreatedAt, 0),
+				}
+			}
+		}
+	})
+
+	b.Run("go-nostr (fastjson)", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				var event nostr.Event
+				json.Unmarshal([]byte(evtstr), &event)
 			}
 		}
 	})
