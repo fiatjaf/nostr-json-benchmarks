@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/buger/jsonparser"
 	"github.com/bytedance/sonic"
@@ -292,7 +291,7 @@ func BenchmarkFullEvent(b *testing.B) {
 				v := gjson.Parse(evtstr)
 				event.Kind = int(v.Get("kind").Int())
 				event.Content = v.Get("content").String()
-				event.CreatedAt = time.Unix(v.Get("created_at").Int(), 0)
+				event.CreatedAt = Timestamp(v.Get("created_at").Int())
 				event.PubKey = v.Get("pubkey").String()
 				v.Get("tags").ForEach(func(_, v gjson.Result) bool {
 					tag := make([]string, 0, 4)
@@ -341,7 +340,7 @@ func BenchmarkFullEvent(b *testing.B) {
 				event.Kind = int(kind)
 				event.Content, _ = jsonparser.GetString(b, "content")
 				ts, _ := jsonparser.GetInt(b, "created_at")
-				event.CreatedAt = time.Unix(ts, 0)
+				event.CreatedAt = Timestamp(ts)
 				event.PubKey, _ = jsonparser.GetUnsafeString(b, "pubkey")
 				jsonparser.ArrayEach(b, func(tagb []byte, _ jsonparser.ValueType, _ int, _ error) {
 					tag := make([]string, 0, 5)
@@ -460,7 +459,7 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 				evt.Sig, _ = sig.StrictString()
 				createdAt, _ := s.GetByPath("created_at")
 				createdAtInt64, _ := createdAt.StrictInt64()
-				evt.CreatedAt = time.Unix(createdAtInt64, 0)
+				evt.CreatedAt = Timestamp(createdAtInt64)
 				content, _ := s.GetByPath("content")
 				evt.Content, _ = content.StrictString()
 				tagsv, _ := s.GetByPath("tags")
@@ -512,7 +511,7 @@ func BenchmarkEnvelope(b *testing.B) {
 				json.Unmarshal(env[0], &typ)
 				switch typ {
 				case "EVENT":
-					if len(env) != 2 {
+					if len(env) != 3 {
 						continue
 					}
 					var sub string
@@ -642,7 +641,7 @@ func BenchmarkEnvelope(b *testing.B) {
 				json.Unmarshal(env[0], &typ)
 				switch typ {
 				case "EVENT":
-					if len(env) != 2 {
+					if len(env) != 3 {
 						continue
 					}
 					var sub string
@@ -687,6 +686,50 @@ func BenchmarkEnvelope(b *testing.B) {
 					_ = v.Get("1").Str
 					var event Event
 					easyjson.Unmarshal([]byte(v.Get("2").Raw), &event)
+				case "OK":
+					_ = v.Get("1").Str
+					_ = v.Get("2").Bool()
+					_ = v.Get("3").Str
+				case "EOSE":
+					_ = v.Get("1").Str
+				case "NOTICE":
+					_ = v.Get("1").Str
+				}
+			}
+		}
+	})
+
+	b.Run("gjson + fastjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				v := gjson.Parse(line)
+				switch v.Get("0").Str {
+				case "EVENT":
+					_ = v.Get("1").Str
+					var event nostr.Event
+					json.Unmarshal([]byte(v.Get("2").Raw), &event)
+				case "OK":
+					_ = v.Get("1").Str
+					_ = v.Get("2").Bool()
+					_ = v.Get("3").Str
+				case "EOSE":
+					_ = v.Get("1").Str
+				case "NOTICE":
+					_ = v.Get("1").Str
+				}
+			}
+		}
+	})
+
+	b.Run("gjson + sonic", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				v := gjson.Parse(line)
+				switch v.Get("0").Str {
+				case "EVENT":
+					_ = v.Get("1").Str
+					var event Event
+					api.UnmarshalFromString(v.Get("2").Raw, &event)
 				case "OK":
 					_ = v.Get("1").Str
 					_ = v.Get("2").Bool()

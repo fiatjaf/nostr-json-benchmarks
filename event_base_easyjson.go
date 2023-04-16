@@ -4,8 +4,6 @@ package benchmarks
 
 import (
 	json "encoding/json"
-	"time"
-
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -19,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks1(in *jlexer.Lexer, out *EventShort) {
+func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks(in *jlexer.Lexer, out *EventShort) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -39,7 +37,7 @@ func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks1(in *jlexer.Lexer
 		}
 		switch key {
 		case "created_at":
-			out.CreatedAt = int(in.Int64())
+			out.CreatedAt = int(in.Int())
 		case "content":
 			out.Content = string(in.String())
 		case "pubkey":
@@ -54,8 +52,7 @@ func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks1(in *jlexer.Lexer
 		in.Consumed()
 	}
 }
-
-func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks1(out *jwriter.Writer, in EventShort) {
+func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks(out *jwriter.Writer, in EventShort) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -79,15 +76,14 @@ func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks1(out *jwriter.Wri
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EventShort) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks1(w, v)
+	easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks(w, v)
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EventShort) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks1(l, v)
+	easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks(l, v)
 }
-
-func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks2(in *jlexer.Lexer, out *Event) {
+func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks1(in *jlexer.Lexer, out *Event) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -109,7 +105,7 @@ func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks2(in *jlexer.Lexer
 		case "kind":
 			out.Kind = int(in.Int())
 		case "created_at":
-			out.CreatedAt = time.Unix(in.Int64(), 0)
+			out.CreatedAt = Timestamp(in.Int64())
 		case "content":
 			out.Content = string(in.String())
 		case "pubkey":
@@ -134,30 +130,30 @@ func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks2(in *jlexer.Lexer
 					out.Tags = (out.Tags)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v7 Tag
+					var v1 Tag
 					if in.IsNull() {
 						in.Skip()
-						v7 = nil
+						v1 = nil
 					} else {
 						in.Delim('[')
-						if v7 == nil {
+						if v1 == nil {
 							if !in.IsDelim(']') {
-								v7 = make(Tag, 0, 4)
+								v1 = make(Tag, 0, 4)
 							} else {
-								v7 = Tag{}
+								v1 = Tag{}
 							}
 						} else {
-							v7 = (v7)[:0]
+							v1 = (v1)[:0]
 						}
 						for !in.IsDelim(']') {
-							var v8 string
-							v8 = string(in.String())
-							v7 = append(v7, v8)
+							var v2 string
+							v2 = string(in.String())
+							v1 = append(v1, v2)
 							in.WantComma()
 						}
 						in.Delim(']')
 					}
-					out.Tags = append(out.Tags, v7)
+					out.Tags = append(out.Tags, v1)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -172,8 +168,7 @@ func easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks2(in *jlexer.Lexer
 		in.Consumed()
 	}
 }
-
-func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks2(out *jwriter.Writer, in Event) {
+func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks1(out *jwriter.Writer, in Event) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -185,7 +180,7 @@ func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks2(out *jwriter.Wri
 	{
 		const prefix string = ",\"created_at\":"
 		out.RawString(prefix)
-		out.Int64(in.CreatedAt.Unix())
+		out.Int64(int64(in.CreatedAt))
 	}
 	{
 		const prefix string = ",\"content\":"
@@ -214,19 +209,19 @@ func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks2(out *jwriter.Wri
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v9, v10 := range in.Tags {
-				if v9 > 0 {
+			for v3, v4 := range in.Tags {
+				if v3 > 0 {
 					out.RawByte(',')
 				}
-				if v10 == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+				if v4 == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 					out.RawString("null")
 				} else {
 					out.RawByte('[')
-					for v11, v12 := range v10 {
-						if v11 > 0 {
+					for v5, v6 := range v4 {
+						if v5 > 0 {
 							out.RawByte(',')
 						}
-						out.String(string(v12))
+						out.String(string(v6))
 					}
 					out.RawByte(']')
 				}
@@ -239,10 +234,10 @@ func easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks2(out *jwriter.Wri
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Event) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks2(w, v)
+	easyjson723fdcd4EncodeGithubComFiatjafNostrJsonBenchmarks1(w, v)
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Event) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks2(l, v)
+	easyjson723fdcd4DecodeGithubComFiatjafNostrJsonBenchmarks1(l, v)
 }

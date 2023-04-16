@@ -7,7 +7,7 @@ import (
 
 type Event struct {
 	Kind      int       `json:"kind"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt Timestamp `json:"created_at"`
 	Content   string    `json:"content"`
 	PubKey    string    `json:"pubkey"`
 	Sig       string    `json:"sig"`
@@ -18,6 +18,12 @@ type Event struct {
 func (e Event) String() string {
 	b, _ := json.Marshal(e)
 	return string(b)
+}
+
+type Timestamp int64
+
+func (t Timestamp) Time() time.Time {
+	return time.Unix(int64(t), 0)
 }
 
 type EventShort struct {

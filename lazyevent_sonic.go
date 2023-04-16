@@ -131,7 +131,7 @@ func (l *NotLazyEventSonic) Kind() int {
 }
 
 func (l *NotLazyEventSonic) CreatedAt() time.Time {
-	return l.embedded.CreatedAt
+	return l.embedded.CreatedAt.Time()
 }
 
 func (l *NotLazyEventSonic) Content() string {

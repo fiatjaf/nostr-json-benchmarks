@@ -5,12 +5,23 @@ package benchmarks
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"time"
-
 	fflib "github.com/pquerna/ffjson/fflib/v1"
 )
+
+// MarshalJSON marshal bytes to json - template
+func (j *Event) MarshalJSON() ([]byte, error) {
+	var buf fflib.Buffer
+	if j == nil {
+		buf.WriteString("null")
+		return buf.Bytes(), nil
+	}
+	err := j.MarshalJSONBuf(&buf)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
 
 // MarshalJSONBuf marshal buff to json - template
 func (j *Event) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
@@ -25,7 +36,7 @@ func (j *Event) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	buf.WriteString(`{"kind":`)
 	fflib.FormatBits2(buf, uint64(j.Kind), 10, j.Kind < 0)
 	buf.WriteString(`,"created_at":`)
-	fflib.FormatBits2(buf, uint64(j.CreatedAt.Unix()), 10, false)
+	fflib.FormatBits2(buf, uint64(j.CreatedAt), 10, j.CreatedAt < 0)
 	buf.WriteString(`,"content":`)
 	fflib.WriteJsonString(buf, string(j.Content))
 	buf.WriteString(`,"pubkey":`)
@@ -94,6 +105,12 @@ var ffjKeyEventSig = []byte("sig")
 var ffjKeyEventID = []byte("id")
 
 var ffjKeyEventTags = []byte("tags")
+
+// UnmarshalJSON umarshall json - template of ffjson
+func (j *Event) UnmarshalJSON(input []byte) error {
+	fs := fflib.NewFFLexer(input)
+	return j.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
+}
 
 // UnmarshalJSONFFLexer fast json unmarshall - template ffjson
 func (j *Event) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
@@ -310,10 +327,13 @@ handle_Kind:
 	}
 
 	{
+
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			tval, err := fflib.ParseInt(fs.Output.Bytes(), 10, 64)
+
 			if err != nil {
 				return fs.WrapErr(err)
 			}
@@ -328,24 +348,27 @@ handle_Kind:
 
 handle_CreatedAt:
 
-	/* handler: j.CreatedAt type=int64 kind=int64 quoted=false*/
+	/* handler: j.CreatedAt type=benchmarks.Timestamp kind=int64 quoted=false*/
 
 	{
 		if tok != fflib.FFTok_integer && tok != fflib.FFTok_null {
-			return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for int64", tok))
+			return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for Timestamp", tok))
 		}
 	}
 
 	{
+
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			tval, err := fflib.ParseInt(fs.Output.Bytes(), 10, 64)
+
 			if err != nil {
 				return fs.WrapErr(err)
 			}
 
-			j.CreatedAt = time.Unix(tval, 0)
+			j.CreatedAt = Timestamp(tval)
 
 		}
 	}
@@ -366,6 +389,7 @@ handle_Content:
 		}
 
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			outBuf := fs.Output.Bytes()
@@ -391,6 +415,7 @@ handle_PubKey:
 		}
 
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			outBuf := fs.Output.Bytes()
@@ -416,6 +441,7 @@ handle_Sig:
 		}
 
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			outBuf := fs.Output.Bytes()
@@ -441,6 +467,7 @@ handle_ID:
 		}
 
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			outBuf := fs.Output.Bytes()
@@ -455,18 +482,120 @@ handle_ID:
 
 handle_Tags:
 
-	/* handler: j.Tags type=[][]string kind=slice quoted=false*/
+	/* handler: j.Tags type=benchmarks.Tags kind=slice quoted=false*/
 
 	{
-		/* Falling back. type=[][]string kind=slice */
-		tbuf, err := fs.CaptureField(tok)
-		if err != nil {
-			return fs.WrapErr(err)
+
+		{
+			if tok != fflib.FFTok_left_brace && tok != fflib.FFTok_null {
+				return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for Tags", tok))
+			}
 		}
 
-		err = json.Unmarshal(tbuf, &j.Tags)
-		if err != nil {
-			return fs.WrapErr(err)
+		if tok == fflib.FFTok_null {
+			j.Tags = nil
+		} else {
+
+			j.Tags = []Tag{}
+
+			wantVal := true
+
+			for {
+
+				var tmpJTags Tag
+
+				tok = fs.Scan()
+				if tok == fflib.FFTok_error {
+					goto tokerror
+				}
+				if tok == fflib.FFTok_right_brace {
+					break
+				}
+
+				if tok == fflib.FFTok_comma {
+					if wantVal == true {
+						// TODO(pquerna): this isn't an ideal error message, this handles
+						// things like [,,,] as an array value.
+						return fs.WrapErr(fmt.Errorf("wanted value token, but got token: %v", tok))
+					}
+					continue
+				} else {
+					wantVal = true
+				}
+
+				/* handler: tmpJTags type=benchmarks.Tag kind=slice quoted=false*/
+
+				{
+
+					{
+						if tok != fflib.FFTok_left_brace && tok != fflib.FFTok_null {
+							return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for Tag", tok))
+						}
+					}
+
+					if tok == fflib.FFTok_null {
+						tmpJTags = nil
+					} else {
+
+						tmpJTags = []string{}
+
+						wantVal := true
+
+						for {
+
+							var tmpTmpJTags string
+
+							tok = fs.Scan()
+							if tok == fflib.FFTok_error {
+								goto tokerror
+							}
+							if tok == fflib.FFTok_right_brace {
+								break
+							}
+
+							if tok == fflib.FFTok_comma {
+								if wantVal == true {
+									// TODO(pquerna): this isn't an ideal error message, this handles
+									// things like [,,,] as an array value.
+									return fs.WrapErr(fmt.Errorf("wanted value token, but got token: %v", tok))
+								}
+								continue
+							} else {
+								wantVal = true
+							}
+
+							/* handler: tmpTmpJTags type=string kind=string quoted=false*/
+
+							{
+
+								{
+									if tok != fflib.FFTok_string && tok != fflib.FFTok_null {
+										return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for string", tok))
+									}
+								}
+
+								if tok == fflib.FFTok_null {
+
+								} else {
+
+									outBuf := fs.Output.Bytes()
+
+									tmpTmpJTags = string(string(outBuf))
+
+								}
+							}
+
+							tmpJTags = append(tmpJTags, tmpTmpJTags)
+
+							wantVal = false
+						}
+					}
+				}
+
+				j.Tags = append(j.Tags, tmpJTags)
+
+				wantVal = false
+			}
 		}
 	}
 
@@ -695,10 +824,13 @@ handle_CreatedAt:
 	}
 
 	{
+
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			tval, err := fflib.ParseInt(fs.Output.Bytes(), 10, 64)
+
 			if err != nil {
 				return fs.WrapErr(err)
 			}
@@ -724,6 +856,7 @@ handle_Content:
 		}
 
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			outBuf := fs.Output.Bytes()
@@ -749,6 +882,7 @@ handle_PubKey:
 		}
 
 		if tok == fflib.FFTok_null {
+
 		} else {
 
 			outBuf := fs.Output.Bytes()
