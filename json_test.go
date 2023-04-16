@@ -13,6 +13,7 @@ import (
 	"github.com/bytedance/sonic/ast"
 	gojson "github.com/goccy/go-json"
 	"github.com/mailru/easyjson"
+	"github.com/minio/simdjson-go"
 	"github.com/mreiferson/go-ujson"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/pquerna/ffjson/ffjson"
@@ -128,6 +129,27 @@ func BenchmarkShortEvent(b *testing.B) {
 				n2.Int64()
 				n3, _ := s.GetByPath("pubkey")
 				n3.String()
+			}
+		}
+	})
+
+	b.Run("simdjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			reuse := simdjson.ParsedJson{}
+			for _, evtstr := range events {
+				pj, _ := simdjson.Parse([]byte(evtstr), &reuse,
+					simdjson.WithCopyStrings(false),
+				)
+				pj.ForEach(func(o simdjson.Iter) error {
+					n, _ := o.Object(nil)
+					var dst simdjson.Element
+
+					_, _ = n.FindKey("content", &dst).Iter.String()
+					_, _ = n.FindKey("created_at", &dst).Iter.Int()
+					_, _ = n.FindKey("pubkey", &dst).Iter.String()
+
+					return nil
+				})
 			}
 		}
 	})
@@ -417,34 +439,6 @@ func BenchmarkFullEvent(b *testing.B) {
 			}
 		}
 	})
-}
-
-func BenchmarkGoNostrEventTyped(b *testing.B) {
-	sonic.Pretouch(reflect.TypeOf(Event{}))
-	api := sonic.Config{
-		NoQuoteTextMarshaler: true,
-		UseInt64:             true,
-		NoNullSliceOrMap:     true,
-	}.Froze()
-	events := loadEvents()
-
-	b.Run("go-nostr (fastjson)", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			for _, evtstr := range events {
-				var event nostr.Event
-				json.Unmarshal([]byte(evtstr), &event)
-			}
-		}
-	})
-
-	b.Run("sonic", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			for _, evtstr := range events {
-				var event Event
-				api.UnmarshalFromString(evtstr, &event)
-			}
-		}
-	})
 
 	b.Run("sonic/searcher/get", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -480,11 +474,48 @@ func BenchmarkGoNostrEventTyped(b *testing.B) {
 		}
 	})
 
-	b.Run("easyjson", func(b *testing.B) {
+	b.Run("simdjson", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
+			reuseP := simdjson.ParsedJson{}
+			reuseO := simdjson.Object{}
+			reuseAT := simdjson.Array{}
+			reuseAC := simdjson.Array{}
+
 			for _, evtstr := range events {
-				var event Event
-				easyjson.Unmarshal([]byte(evtstr), &event)
+				var evt Event
+				pj, _ := simdjson.Parse([]byte(evtstr), &reuseP,
+					simdjson.WithCopyStrings(false),
+				)
+				pj.ForEach(func(o simdjson.Iter) error {
+					n, _ := o.Object(&reuseO)
+					n.ForEach(func(key []byte, value simdjson.Iter) {
+						switch string(key) {
+						case "id":
+							evt.ID, _ = value.String()
+						case "pubkey":
+							evt.PubKey, _ = value.String()
+						case "created_at":
+							ts, _ := value.Int()
+							evt.CreatedAt = Timestamp(ts)
+						case "kind":
+							kind, _ := value.Int()
+							evt.Kind = int(kind)
+						case "content":
+							evt.Content, _ = value.String()
+						case "tags":
+							evt.Tags = make([]Tag, 0, 20)
+							arr, _ := value.Array(&reuseAT)
+							arr.ForEach(func(tag simdjson.Iter) {
+								items, _ := tag.Array(&reuseAC)
+								strs, _ := items.AsString()
+								evt.Tags = append(evt.Tags, strs)
+							})
+						case "sig":
+							evt.Sig, _ = value.String()
+						}
+					}, nil)
+					return nil
+				})
 			}
 		}
 	})

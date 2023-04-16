@@ -7,6 +7,7 @@ require (
 	github.com/bytedance/sonic v1.8.7
 	github.com/goccy/go-json v0.10.2
 	github.com/mailru/easyjson v0.7.7
+	github.com/minio/simdjson-go v0.4.5
 	github.com/mreiferson/go-ujson v0.0.0-20200614021406-c02629f4935e
 	github.com/nbd-wtf/go-nostr v0.16.12
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
@@ -22,11 +23,13 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/klauspost/compress v1.15.15 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/exp v0.0.0-20221106115401-f9659909a136 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
