@@ -1,105 +1,107 @@
-```
-goos: linux
-goarch: amd64
-pkg: github.com/fiatjaf/nostr-json-benchmarks
-cpu: Intel(R) Core(TM) i5-2400 CPU @ 3.10GHz
-BenchmarkShortEvent/json.Unmarshal-4         	    2426	    503515 ns/op
-BenchmarkShortEvent/gjson-4                  	   15012	     82522 ns/op
-BenchmarkShortEvent/jsonparser-4             	   13888	     77707 ns/op
-BenchmarkShortEvent/easyjson-4               	   10000	    106886 ns/op
-BenchmarkShortEvent/ffjson-4                 	    9321	    124589 ns/op
-BenchmarkShortEvent/go-json-4                	    8940	    225092 ns/op
-BenchmarkShortEvent/ujson-4                  	    6625	    300135 ns/op
-BenchmarkShortEvent/sonic-4                  	   10000	    164359 ns/op
-BenchmarkShortEvent/sonic/get-4              	   28290	     39486 ns/op
-BenchmarkShortEvent/sonic/searcher/get-4     	   29724	     37390 ns/op
-BenchmarkLazyEvent/gjson/0-4                 	    8590	    132401 ns/op
-BenchmarkLazyEvent/gjson/1-4                 	   12025	    116181 ns/op
-BenchmarkLazyEvent/gjson/2-4                 	    6637	    164679 ns/op
-BenchmarkLazyEvent/gjson-megalazy/0-4        	   11526	    129139 ns/op
-BenchmarkLazyEvent/gjson-megalazy/1-4        	   11755	    109693 ns/op
-BenchmarkLazyEvent/gjson-megalazy/2-4        	    7406	    146907 ns/op
-BenchmarkLazyEvent/sonic/0-4                 	   23642	     57547 ns/op
-BenchmarkLazyEvent/sonic/1-4                 	   17113	     67337 ns/op
-BenchmarkLazyEvent/sonic/2-4                 	   16078	     78742 ns/op
-BenchmarkLazyEvent/sonic-megalazy/0-4        	   23032	     45484 ns/op
-BenchmarkLazyEvent/sonic-megalazy/1-4        	    7257	    162680 ns/op
-BenchmarkLazyEvent/sonic-megalazy/2-4        	    4239	    335758 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/0-4        	    7305	    227692 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/1-4        	    7372	    204597 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/2-4        	    4500	    233741 ns/op
-BenchmarkFullEvent/json.Unmarshal-4          	    2838	    473989 ns/op
-BenchmarkFullEvent/gjson-4                   	    4735	    224242 ns/op
-BenchmarkFullEvent/gjson_assign-4            	    5478	    281850 ns/op
-BenchmarkFullEvent/jsonparser-4              	    3355	    424668 ns/op
-BenchmarkFullEvent/jsonparser_assign-4       	    3067	    386219 ns/op
-BenchmarkFullEvent/easyjson-4                	   11836	     92130 ns/op
-BenchmarkFullEvent/ffjson-4                  	   10000	    143380 ns/op
-BenchmarkFullEvent/go-json-4                 	    3924	    270988 ns/op
-BenchmarkFullEvent/ujson-4                   	    2928	    350827 ns/op
-BenchmarkFullEvent/sonic-4                   	    8581	    221211 ns/op
-BenchmarkGoNostrEventTyped/go-nostr_(fastjson)-4         	    2232	    624558 ns/op
-BenchmarkGoNostrEventTyped/sonic-4                       	    5652	    243128 ns/op
-BenchmarkGoNostrEventTyped/sonic/searcher/get-4          	    5983	    205589 ns/op
-BenchmarkGoNostrEventTyped/easyjson-4                    	   12874	     94925 ns/op
-BenchmarkEnvelope/json.Unmarshal-4                       	    1350	   1001001 ns/op
-BenchmarkEnvelope/go-nostr_(fastjson)-4                  	    4542	    380435 ns/op
-BenchmarkEnvelope/sonic-4                                	    6600	    300537 ns/op
-BenchmarkEnvelope/easyjson-4                             	    2294	    476680 ns/op
-BenchmarkEnvelope/gjson_+_easyjson-4                     	    4464	    240154 ns/op
-BenchmarkEnvelope/gjson_+_fastjson-4                     	    2588	    723539 ns/op
-BenchmarkEnvelope/gjson_+_sonic-4                        	    3758	    344509 ns/op
-```
+## latest results
 
 ```
 goos: linux
 goarch: amd64
 pkg: github.com/fiatjaf/nostr-json-benchmarks
-cpu: AMD Ryzen 3 3200G with Radeon Vega Graphics
-BenchmarkShortEvent/json.Unmarshal-4         	    4198	    543103 ns/op
-BenchmarkShortEvent/gjson-4                  	   15984	     73074 ns/op
-BenchmarkShortEvent/jsonparser-4             	   12283	    106477 ns/op
-BenchmarkShortEvent/easyjson-4               	    9250	    126239 ns/op
-BenchmarkShortEvent/ffjson-4                 	    8499	    144808 ns/op
-BenchmarkShortEvent/go-json-4                	    5812	    252707 ns/op
-BenchmarkShortEvent/ujson-4                  	    2725	    377234 ns/op
-BenchmarkShortEvent/sonic-4                  	    4632	    229008 ns/op
-BenchmarkShortEvent/sonic/get-4              	   46164	     38560 ns/op
-BenchmarkShortEvent/sonic/searcher/get-4     	   28123	     40713 ns/op
-BenchmarkLazyEvent/gjson/0-4                 	   10945	    103520 ns/op
-BenchmarkLazyEvent/gjson/1-4                 	    9576	    110570 ns/op
-BenchmarkLazyEvent/gjson/2-4                 	    7506	    133474 ns/op
-BenchmarkLazyEvent/gjson-megalazy/0-4        	   12618	    110834 ns/op
-BenchmarkLazyEvent/gjson-megalazy/1-4        	   11730	     98559 ns/op
-BenchmarkLazyEvent/gjson-megalazy/2-4        	    8503	    126718 ns/op
-BenchmarkLazyEvent/sonic/0-4                 	   18250	     66081 ns/op
-BenchmarkLazyEvent/sonic/1-4                 	   14512	     79702 ns/op
-BenchmarkLazyEvent/sonic/2-4                 	   13284	     85962 ns/op
-BenchmarkLazyEvent/sonic-megalazy/0-4        	   22660	     54825 ns/op
-BenchmarkLazyEvent/sonic-megalazy/1-4        	    9093	    162800 ns/op
-BenchmarkLazyEvent/sonic-megalazy/2-4        	    4075	    310729 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/0-4        	    3710	    274257 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/1-4        	    3883	    274258 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/2-4        	    4029	    262577 ns/op
-BenchmarkFullEvent/json.Unmarshal-4          	    2588	    503170 ns/op
-BenchmarkFullEvent/gjson-4                   	    5896	    206969 ns/op
-BenchmarkFullEvent/gjson_assign-4            	    4537	    231934 ns/op
-BenchmarkFullEvent/jsonparser-4              	    5643	    338932 ns/op
-BenchmarkFullEvent/jsonparser_assign-4       	    3063	    452436 ns/op
-BenchmarkFullEvent/easyjson-4                	    8450	    124422 ns/op
-BenchmarkFullEvent/ffjson-4                  	    5846	    194116 ns/op
-BenchmarkFullEvent/go-json-4                 	    3598	    300389 ns/op
-BenchmarkFullEvent/ujson-4                   	    2582	    401295 ns/op
-BenchmarkFullEvent/sonic-4                   	    4593	    266281 ns/op
-BenchmarkGoNostrEventTyped/go-nostr_(fastjson)-4         	    1968	    646721 ns/op
-BenchmarkGoNostrEventTyped/sonic-4                       	    6648	    262897 ns/op
-BenchmarkGoNostrEventTyped/sonic/searcher/get-4          	    4214	    287286 ns/op
-BenchmarkGoNostrEventTyped/easyjson-4                    	    9390	    122513 ns/op
-BenchmarkEnvelope/json.Unmarshal-4                       	    1185	    993432 ns/op
-BenchmarkEnvelope/go-nostr_(fastjson)-4                  	    2926	    427638 ns/op
-BenchmarkEnvelope/sonic-4                                	    3366	    356463 ns/op
-BenchmarkEnvelope/easyjson-4                             	    1725	    653290 ns/op
-BenchmarkEnvelope/gjson_+_easyjson-4                     	    4626	    245818 ns/op
-BenchmarkEnvelope/gjson_+_fastjson-4                     	    1549	    750301 ns/op
-BenchmarkEnvelope/gjson_+_sonic-4                        	    3087	    373509 ns/op
+cpu: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+BenchmarkShortEvent/json.Unmarshal-8              7992     126756 ns/op
+BenchmarkShortEvent/gjson-8                      59445      20438 ns/op
+BenchmarkShortEvent/jsonparser-8                 55084      21448 ns/op
+BenchmarkShortEvent/easyjson-8                   44335      26431 ns/op
+BenchmarkShortEvent/ffjson-8                     39339      30645 ns/op
+BenchmarkShortEvent/go-json-8                    20524      58168 ns/op
+BenchmarkShortEvent/ujson-8                      15710      77279 ns/op
+BenchmarkShortEvent/sonic-8                      25264      47235 ns/op
+BenchmarkShortEvent/sonic/get-8                  97633      11802 ns/op
+BenchmarkShortEvent/sonic/searcher/get-8        102620      11617 ns/op
+BenchmarkLazyEvent/gjson/0-8                     50014      23433 ns/op
+BenchmarkLazyEvent/gjson/1-8                     47962      25316 ns/op
+BenchmarkLazyEvent/gjson/2-8                     36418      32128 ns/op
+BenchmarkLazyEvent/gjson-megalazy/0-8            51171      23493 ns/op
+BenchmarkLazyEvent/gjson-megalazy/1-8            47170      25012 ns/op
+BenchmarkLazyEvent/gjson-megalazy/2-8            37058      32219 ns/op
+BenchmarkLazyEvent/sonic/0-8                     76059      15751 ns/op
+BenchmarkLazyEvent/sonic/1-8                     69402      17020 ns/op
+BenchmarkLazyEvent/sonic/2-8                     54028      22084 ns/op
+BenchmarkLazyEvent/sonic-megalazy/0-8            93540      12638 ns/op
+BenchmarkLazyEvent/sonic-megalazy/1-8            29061      41409 ns/op
+BenchmarkLazyEvent/sonic-megalazy/2-8            12225      97880 ns/op
+BenchmarkLazyEvent/sonic-not-lazy/0-8            19933      59984 ns/op
+BenchmarkLazyEvent/sonic-not-lazy/1-8            19168      67242 ns/op
+BenchmarkLazyEvent/sonic-not-lazy/2-8            17490      68073 ns/op
+BenchmarkFullEvent/json.Unmarshal-8               8437     134126 ns/op
+BenchmarkFullEvent/gjson-8                       12558      91395 ns/op
+BenchmarkFullEvent/gjson_assign-8                10000     101023 ns/op
+BenchmarkFullEvent/jsonparser-8                  10000     115689 ns/op
+BenchmarkFullEvent/jsonparser_assign-8            9474     119610 ns/op
+BenchmarkFullEvent/easyjson-8                    42764      29632 ns/op
+BenchmarkFullEvent/ffjson-8                      25148      46276 ns/op
+BenchmarkFullEvent/go-json-8                     15232      79610 ns/op
+BenchmarkFullEvent/ujson-8                       12438      95242 ns/op
+BenchmarkFullEvent/sonic-8                       18808      63641 ns/op
+BenchmarkGoNostrEventTyped/go-nostr_(fastjson)-8              7128     163147 ns/op
+BenchmarkGoNostrEventTyped/sonic-8                           18529      63434 ns/op
+BenchmarkGoNostrEventTyped/sonic/searcher/get-8              18110      66491 ns/op
+BenchmarkGoNostrEventTyped/easyjson-8                        40179      29621 ns/op
+BenchmarkEnvelope/json.Unmarshal-8                            4162     270675 ns/op
+BenchmarkEnvelope/go-nostr_(fastjson)-8                       9735     118360 ns/op
+BenchmarkEnvelope/sonic-8                                    14570      81534 ns/op
+BenchmarkEnvelope/easyjson-8                                  7657     154056 ns/op
+BenchmarkEnvelope/gjson_+_easyjson-8                         19718      59953 ns/op
+BenchmarkEnvelope/gjson_+_fastjson-8                          6255     197929 ns/op
+BenchmarkEnvelope/gjson_+_sonic-8                            12292      96553 ns/op
+```
+
+```
+goos: darwin
+goarch: amd64
+pkg: github.com/fiatjaf/nostr-json-benchmarks
+cpu: VirtualApple @ 2.50GHz
+BenchmarkShortEvent/json.Unmarshal-8              6344     192395 ns/op
+BenchmarkShortEvent/gjson-8                      52974      22386 ns/op
+BenchmarkShortEvent/jsonparser-8                 33144      35594 ns/op
+BenchmarkShortEvent/easyjson-8                   29486      40891 ns/op
+BenchmarkShortEvent/ffjson-8                     31902      37149 ns/op
+BenchmarkShortEvent/go-json-8                    17902      69153 ns/op
+BenchmarkShortEvent/ujson-8                      13508      87936 ns/op
+BenchmarkShortEvent/sonic-8                      20160      58223 ns/op
+BenchmarkShortEvent/sonic/get-8                  44620      26023 ns/op
+BenchmarkShortEvent/sonic/searcher/get-8         47250      25475 ns/op
+BenchmarkLazyEvent/gjson/0-8                     42606      27756 ns/op
+BenchmarkLazyEvent/gjson/1-8                     42033      27940 ns/op
+BenchmarkLazyEvent/gjson/2-8                     33012      36033 ns/op
+BenchmarkLazyEvent/gjson-megalazy/0-8            43329      27170 ns/op
+BenchmarkLazyEvent/gjson-megalazy/1-8            42418      27887 ns/op
+BenchmarkLazyEvent/gjson-megalazy/2-8            33705      35773 ns/op
+BenchmarkLazyEvent/sonic/0-8                     38289      30556 ns/op
+BenchmarkLazyEvent/sonic/1-8                     39391      30872 ns/op
+BenchmarkLazyEvent/sonic/2-8                     29160      40955 ns/op
+BenchmarkLazyEvent/sonic-megalazy/0-8            43404      27646 ns/op
+BenchmarkLazyEvent/sonic-megalazy/1-8            13741      87149 ns/op
+BenchmarkLazyEvent/sonic-megalazy/2-8             5533     213937 ns/op
+BenchmarkLazyEvent/sonic-not-lazy/0-8            13936      86070 ns/op
+BenchmarkLazyEvent/sonic-not-lazy/1-8            13908      86919 ns/op
+BenchmarkLazyEvent/sonic-not-lazy/2-8            13684      88232 ns/op
+BenchmarkFullEvent/json.Unmarshal-8               7237     163185 ns/op
+BenchmarkFullEvent/gjson-8                       14703      80775 ns/op
+BenchmarkFullEvent/gjson_assign-8                14001      85197 ns/op
+BenchmarkFullEvent/jsonparser-8                   7188     167197 ns/op
+BenchmarkFullEvent/jsonparser_assign-8            7284     162858 ns/op
+BenchmarkFullEvent/easyjson-8                    32721      36832 ns/op
+BenchmarkFullEvent/ffjson-8                      18822      63711 ns/op
+BenchmarkFullEvent/go-json-8                     12494      94566 ns/op
+BenchmarkFullEvent/ujson-8                       12168      97568 ns/op
+BenchmarkFullEvent/sonic-8                       14277      83630 ns/op
+BenchmarkGoNostrEventTyped/go-nostr_(fastjson)-8              5760     203313 ns/op
+BenchmarkGoNostrEventTyped/sonic-8                           14433      84381 ns/op
+BenchmarkGoNostrEventTyped/sonic/searcher/get-8              10000     110428 ns/op
+BenchmarkGoNostrEventTyped/easyjson-8                        33031      36826 ns/op
+BenchmarkEnvelope/json.Unmarshal-8                            3354     340486 ns/op
+BenchmarkEnvelope/go-nostr_(fastjson)-8                       7682     147666 ns/op
+BenchmarkEnvelope/sonic-8                                    10000     115144 ns/op
+BenchmarkEnvelope/easyjson-8                                  6362     186066 ns/op
+BenchmarkEnvelope/gjson_+_easyjson-8                         20208      59356 ns/op
+BenchmarkEnvelope/gjson_+_fastjson-8                          5320     224552 ns/op
+BenchmarkEnvelope/gjson_+_sonic-8                            10000     107003 ns/op
 ```
