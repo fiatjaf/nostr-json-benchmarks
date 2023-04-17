@@ -134,6 +134,10 @@ func BenchmarkShortEvent(b *testing.B) {
 	})
 
 	b.Run("simdjson", func(b *testing.B) {
+		if !simdjson.SupportedCPU() {
+			return
+		}
+
 		for i := 0; i < b.N; i++ {
 			reuse := simdjson.ParsedJson{}
 			for _, evtstr := range events {
@@ -475,6 +479,10 @@ func BenchmarkFullEvent(b *testing.B) {
 	})
 
 	b.Run("simdjson", func(b *testing.B) {
+		if !simdjson.SupportedCPU() {
+			return
+		}
+
 		for i := 0; i < b.N; i++ {
 			reuseP := simdjson.ParsedJson{}
 			reuseO := simdjson.Object{}
@@ -516,6 +524,14 @@ func BenchmarkFullEvent(b *testing.B) {
 					}, nil)
 					return nil
 				})
+			}
+		}
+	})
+
+	b.Run("custom", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				parseEvent(evtstr)
 			}
 		}
 	})
@@ -761,6 +777,27 @@ func BenchmarkEnvelope(b *testing.B) {
 					_ = v.Get("1").Str
 					var event Event
 					api.UnmarshalFromString(v.Get("2").Raw, &event)
+				case "OK":
+					_ = v.Get("1").Str
+					_ = v.Get("2").Bool()
+					_ = v.Get("3").Str
+				case "EOSE":
+					_ = v.Get("1").Str
+				case "NOTICE":
+					_ = v.Get("1").Str
+				}
+			}
+		}
+	})
+
+	b.Run("gjson + custom", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				v := gjson.Parse(line)
+				switch v.Get("0").Str {
+				case "EVENT":
+					_ = v.Get("1").Str
+					parseEvent(v.Get("2").Raw)
 				case "OK":
 					_ = v.Get("1").Str
 					_ = v.Get("2").Bool()

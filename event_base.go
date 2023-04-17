@@ -13,6 +13,8 @@ type Event struct {
 	Sig       string    `json:"sig"`
 	ID        string    `json:"id"`
 	Tags      Tags      `json:"tags"`
+
+	extra map[string]any
 }
 
 func (e Event) String() string {
