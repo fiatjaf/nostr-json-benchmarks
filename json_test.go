@@ -819,6 +819,38 @@ func BenchmarkEnvelope(b *testing.B) {
 			}
 		}
 	})
+
+	b.Run("sonic + easyjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				searcher := ast.NewSearcher(line)
+				fst, _ := searcher.GetByPath(0)
+				first, _ := fst.StrictString()
+				switch first {
+				case "EVENT":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+					thr, _ := searcher.GetByPath(2)
+					third, _ := thr.Raw()
+					var event Event
+					easyjson.Unmarshal([]byte(third), &event)
+				case "OK":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+					thr, _ := searcher.GetByPath(2)
+					_, _ = thr.Bool()
+					fth, _ := searcher.GetByPath(3)
+					_, _ = fth.StrictString()
+				case "EOSE":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+				case "NOTICE":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+				}
+			}
+		}
+	})
 }
 
 func loadLines() []string {
