@@ -8,19 +8,6 @@ import (
 	"github.com/mailru/easyjson"
 )
 
-// this is currently broken::w
-
-// func TestCustomParser(t *testing.T) {
-// 	for _, jevt := range loadEvents() {
-// 		evt, err := parseEvent(jevt)
-// 		if err != nil {
-// 			t.Errorf("failed to parse '%s': %s", jevt, err)
-// 		}
-//
-// 		checkParsedCorrectly(t, jevt, evt)
-// 	}
-// }
-
 func TestEasyJson(t *testing.T) {
 	for _, jevt := range loadEvents() {
 		var evt Event
@@ -52,6 +39,7 @@ func TestNson(t *testing.T) {
 			t.Errorf("failed to parse '%s'", jevt)
 		}
 
+		// fmt.Println("\n\ncomparing:\n", jevt, "\n~\n", evt)
 		checkParsedCorrectly(t, jevt, evt)
 	}
 }
@@ -66,3 +54,15 @@ func TestTLV(t *testing.T) {
 		checkParsedCorrectly(t, string(jevt), evt)
 	}
 }
+
+// this is currently broken:
+// func TestCustomParser(t *testing.T) {
+// 	for _, jevt := range loadEvents() {
+// 		evt, err := parseEvent(jevt)
+// 		if err != nil {
+// 			t.Errorf("failed to parse '%s': %s", jevt, err)
+// 		}
+//
+// 		checkParsedCorrectly(t, jevt, evt)
+// 	}
+// }

@@ -38,14 +38,17 @@ func decodeNson(data string) *Event {
 	nsonDescriptors, _ := hex.DecodeString(data[320 : 320+nsonSize])
 
 	// dynamic fields
+	// kind
 	kindChars := int(nsonDescriptors[0])
 	kindStart := 320 + nsonSize + 9 // len(`","kind":`)
 	evt.Kind, _ = strconv.Atoi(data[kindStart : kindStart+kindChars])
 
+	// content
 	contentChars := int(binary.BigEndian.Uint16(nsonDescriptors[1:3]))
 	contentStart := kindStart + kindChars + 12 // len(`,"content":"`)
-	evt.Content = data[contentStart : contentStart+contentChars]
+	evt.Content, _ = strconv.Unquote(`"` + data[contentStart:contentStart+contentChars] + `"`)
 
+	// tags
 	nTags := int(nsonDescriptors[3])
 	evt.Tags = make(Tags, nTags)
 	tagsStart := contentStart + contentChars + 9 // len(`","tags":`)
@@ -62,7 +65,7 @@ func decodeNson(data string) *Event {
 			itemStart := tagsIndex + 2 // len(`["`) or len(`,"`)
 			itemChars := int(binary.BigEndian.Uint16(nsonDescriptors[nsonIndex:]))
 			nsonIndex++
-			tag[n] = data[itemStart : itemStart+itemChars]
+			tag[n], _ = strconv.Unquote(`"` + data[itemStart:itemStart+itemChars] + `"`)
 			tagsIndex = itemStart + itemChars + 1 // len(`"`)
 		}
 		tagsIndex += 1 // len(`]`)
