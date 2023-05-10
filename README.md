@@ -1,5 +1,12 @@
 ## latest results
 
+each "operation" in these benchmarks consists in decoding 35 events taken at a random time from random relays and stored at `data.json`.
+
+- `BenchmarkShortEvent` is only decoding 3 fields from the event: `"created_at"`, `"content"` and `"pubkey"`.
+- `BenchmarkLazyEvent` is not really decoding the full JSON, but instead storing a reference to it _somehow_ and then decoding only the requested fields when they are requested by a getter, this is only possible in some libraries and there are simulations with results being cached for further access, not cached at all or event being a fake lazy that actually decodes the full object first, then returns the decoded stuff from the getters.
+- `BenchmarkFullEvent` is turning JSON into a struct (except on the case of `tlv_naïve` and `leaner_*` which take a binary-encoded format that isn't JSON).
+- `BenchmarkEnvelope` is turning a relay message like `["EVENT", "_", {...}]` into a struct -- instead of just the event -- in this case multiple combinations of libraries are used sometimes, some for going through the array elements and others for actually decoding the event JSON.
+
 ```
 goos: linux
 goarch: amd64
@@ -59,3 +66,11 @@ BenchmarkEnvelope/gjson_+_nson-4                          	    8824	    180602 n
 BenchmarkEnvelope/sonic_+_easyjson-4                      	    5696	    200449 ns/op
 BenchmarkEnvelope/sonic_+_nson-4                          	    8563	    151406 ns/op
 ```
+
+## custom decoders and encoders
+
+this repository also contains the `tlv_naïve`, `leaner_binary` and `nson` implementations.
+
+- `tlv_naïve` is just what happens when a beginner Go programmer tries to turn JSON into TLV in a somewhat-generic way.
+- `leaner_binary` is the most optimized custom and yet very simple hand implementation I could do without doing any of the raw memory pointer access that probably cap'n'proto and others would.
+- `nson` is a nice gimmick that gives a performance boost to normal JSON as long as the JSON creator is building the JSON object in a special way. The reader doesn't have to read it in a special way or be aware of the nsonic nature of the JSON blob it just got, though, therefore it is backwards-compatible.
