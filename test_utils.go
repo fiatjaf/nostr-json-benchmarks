@@ -2,7 +2,8 @@ package benchmarks
 
 import (
 	"encoding/json"
-	"fmt"
+	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/nbd-wtf/go-nostr"
@@ -10,8 +11,7 @@ import (
 
 func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) {
 	var canonical nostr.Event
-	err := json.Unmarshal([]byte(jevt), &canonical)
-	fmt.Println(err, jevt)
+	json.Unmarshal([]byte(jevt), &canonical)
 
 	if evt.ID != canonical.ID {
 		t.Errorf("id is wrong: %s != %s", evt.ID, canonical.ID)
@@ -44,4 +44,56 @@ func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) {
 			}
 		}
 	}
+}
+
+func loadLines() []string {
+	b, err := ioutil.ReadFile("data.json")
+	if err != nil {
+		panic(err)
+	}
+
+	text := string(b)
+	lines := strings.Split(text, "\n")
+	return lines[0 : len(lines)-1]
+}
+
+func loadEvents() []string {
+	lines := loadLines()
+	events := make([]string, 0, len(lines))
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "[\"EVENT") {
+			events = append(events, line[13:len(line)-1])
+		}
+	}
+
+	return events
+}
+
+type tlvEvent struct {
+	tlv   []byte
+	event *Event
+}
+
+func loadEventsTLV() []tlvEvent {
+	events := loadEvents()
+	payloads := make([]tlvEvent, len(events))
+	for i, evtstr := range events {
+		evt := &Event{}
+		json.Unmarshal([]byte(evtstr), evt)
+		payloads[i].event = evt
+		payloads[i].tlv = encodeEventTLV(evt)
+	}
+	return payloads
+}
+
+func loadEventsNson() []string {
+	events := loadEvents()
+	payloads := make([]string, len(events))
+	for i, evtstr := range events {
+		evt := &Event{}
+		json.Unmarshal([]byte(evtstr), evt)
+		payloads[i] = encodeNson(evt)
+	}
+	return payloads
 }

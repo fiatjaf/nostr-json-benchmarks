@@ -539,8 +539,8 @@ func BenchmarkFullEvent(b *testing.B) {
 
 	b.Run("tlv binary", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			for _, evttlv := range payloads {
-				decodeEventTLV(evttlv)
+			for _, et := range payloads {
+				decodeEventTLV(et.tlv)
 			}
 		}
 	})
@@ -851,38 +851,4 @@ func BenchmarkEnvelope(b *testing.B) {
 			}
 		}
 	})
-}
-
-func loadLines() []string {
-	b, err := ioutil.ReadFile("data.json")
-	if err != nil {
-		panic(err)
-	}
-
-	text := string(b)
-	lines := strings.Split(text, "\n")
-	return lines[0 : len(lines)-1]
-}
-
-func loadEvents() []string {
-	lines := loadLines()
-	events := make([]string, 0, len(lines))
-
-	for _, line := range lines {
-		if strings.HasPrefix(line, "[\"EVENT") {
-			events = append(events, line[13:len(line)-1])
-		}
-	}
-
-	return events
-}
-
-func loadEventsTLV() [][]byte {
-	events := loadEvents()
-	payloads := make([][]byte, len(events))
-	for i, evtstr := range events {
-		evt, _ := parseEvent(evtstr)
-		payloads[i] = encodeEventTLV(*evt)
-	}
-	return payloads
 }

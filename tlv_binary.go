@@ -70,7 +70,7 @@ func writeTLVEntry(buf *bytes.Buffer, typ uint8, value []byte) {
 	buf.Write(value)
 }
 
-func encodeEventTLV(evt Event) []byte {
+func encodeEventTLV(evt *Event) []byte {
 	buf := bytes.NewBuffer([]byte{})
 
 	id, _ := hex.DecodeString(evt.ID)
