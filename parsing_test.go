@@ -45,6 +45,17 @@ func TestSonic(t *testing.T) {
 	}
 }
 
+func TestNson(t *testing.T) {
+	for _, jevt := range loadEventsNson() {
+		evt := decodeNson(jevt)
+		if evt == nil {
+			t.Errorf("failed to parse '%s'", jevt)
+		}
+
+		checkParsedCorrectly(t, jevt, evt)
+	}
+}
+
 func TestTLV(t *testing.T) {
 	for _, te := range loadEventsTLV() {
 		evt := decodeEventTLV(te.tlv)
