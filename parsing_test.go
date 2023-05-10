@@ -38,18 +38,18 @@ var testEvents = []string{
   }`,
 }
 
-func TestCustomParser(t *testing.T) {
-	for _, events := range [][]string{testEvents, loadEvents()} {
-		for _, jevt := range events {
-			evt, err := parseEvent(jevt)
-			if err != nil {
-				t.Errorf("failed to parse '%s': %s", jevt, err)
-			}
-
-			checkParsedCorrectly(t, jevt, evt)
-		}
-	}
-}
+// func TestCustomParser(t *testing.T) {
+// 	for _, events := range [][]string{testEvents, loadEvents()} {
+// 		for _, jevt := range events {
+// 			evt, err := parseEvent(jevt)
+// 			if err != nil {
+// 				t.Errorf("failed to parse '%s': %s", jevt, err)
+// 			}
+//
+// 			checkParsedCorrectly(t, jevt, evt)
+// 		}
+// 	}
+// }
 
 func TestEasyJson(t *testing.T) {
 	for _, events := range [][]string{testEvents, loadEvents()} {

@@ -2,6 +2,7 @@ package benchmarks
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/nbd-wtf/go-nostr"
@@ -9,7 +10,8 @@ import (
 
 func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) {
 	var canonical nostr.Event
-	json.Unmarshal([]byte(jevt), &canonical)
+	err := json.Unmarshal([]byte(jevt), &canonical)
+	fmt.Println(err, jevt)
 
 	if evt.ID != canonical.ID {
 		t.Errorf("id is wrong: %s != %s", evt.ID, canonical.ID)
@@ -34,11 +36,11 @@ func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) {
 	}
 	for i := range evt.Tags {
 		if len(evt.Tags[i]) != len(canonical.Tags[i]) {
-			t.Errorf("tag[%d] length is wrong: %v != %v", i, len(evt.Tags[i]), len(canonical.Tags[i]))
+			t.Errorf("tag[%d] length is wrong: `%v` != `%v`", i, len(evt.Tags[i]), len(canonical.Tags[i]))
 		}
 		for j := range evt.Tags[i] {
 			if evt.Tags[i][j] != canonical.Tags[i][j] {
-				t.Errorf("tag[%d][%d] is wrong: %s != %s", i, j, evt.Tags[i][j], canonical.Tags[i][j])
+				t.Errorf("tag[%d][%d] is wrong: `%s` != `%s`", i, j, evt.Tags[i][j], canonical.Tags[i][j])
 			}
 		}
 	}
