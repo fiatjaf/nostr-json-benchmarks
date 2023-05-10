@@ -567,7 +567,7 @@ func BenchmarkFullEvent(b *testing.B) {
 		}
 	})
 
-	b.Run("leaner binary to stringified", func(b *testing.B) {
+	b.Run("leaner to string", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, et := range leanerEvents {
 				ev, _ := leanerDecode(et.binary)
