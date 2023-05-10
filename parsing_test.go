@@ -34,9 +34,9 @@ func TestSonic(t *testing.T) {
 
 func TestNson(t *testing.T) {
 	for _, jevt := range loadEventsNson() {
-		evt := decodeNson(jevt)
-		if evt == nil {
-			t.Errorf("failed to parse '%s'", jevt)
+		evt, err := decodeNson(jevt)
+		if err != nil {
+			t.Errorf("failed to parse '%s': %s", jevt, err)
 		}
 
 		// fmt.Println("\n\ncomparing:\n", jevt, "\n~\n", evt)
@@ -46,9 +46,9 @@ func TestNson(t *testing.T) {
 
 func TestTLV(t *testing.T) {
 	for _, te := range loadEventsTLV() {
-		evt := decodeEventTLV(te.binary)
-		if evt == nil {
-			t.Errorf("failed to parse '%v'", te.binary)
+		evt, err := decodeEventTLV(te.binary)
+		if err != nil {
+			t.Errorf("failed to parse '%v': %s", te.binary, err)
 		}
 		jevt, _ := json.Marshal(te.event)
 
@@ -59,9 +59,9 @@ func TestTLV(t *testing.T) {
 
 func TestLeanerBinary(t *testing.T) {
 	for _, te := range loadEventsLeaner() {
-		evt := leanerDecode(te.binary)
-		if evt == nil {
-			t.Errorf("failed to parse '%v'", te.binary)
+		evt, err := leanerDecode(te.binary)
+		if err != nil {
+			t.Errorf("failed to parse '%v': %s", te.binary, err)
 		}
 		jevt, _ := json.Marshal(te.event)
 

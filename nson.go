@@ -3,6 +3,7 @@ package benchmarks
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -22,8 +23,14 @@ import (
    "nson":"xxkkccccttnn111122223333nn11112222"
 */
 
-func decodeNson(data string) *Event {
-	evt := Event{}
+func decodeNson(data string) (evt *Event, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("failed to decode nson: %v", r)
+		}
+	}()
+
+	evt = &Event{}
 
 	// static fields
 	evt.ID = data[7 : 7+64]
@@ -72,7 +79,7 @@ func decodeNson(data string) *Event {
 		evt.Tags[t] = tag
 	}
 
-	return &evt
+	return evt, err
 }
 
 func encodeNson(evt *Event) string {

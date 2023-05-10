@@ -11,14 +11,14 @@ var nsonTestEvents = []string{
 
 func TestBasicNsonParse(t *testing.T) {
 	for _, jevt := range nsonTestEvents {
-		evt := decodeNson(jevt)
+		evt, _ := decodeNson(jevt)
 		checkParsedCorrectly(t, jevt, evt)
 	}
 }
 
 func TestNsonPartialGet(t *testing.T) {
 	for _, jevt := range nsonTestEvents {
-		evt := decodeNson(jevt)
+		evt, _ := decodeNson(jevt)
 
 		if id := nsonGetID(jevt); id != evt.ID {
 			t.Error("partial id wrong")

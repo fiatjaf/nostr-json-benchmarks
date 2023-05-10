@@ -554,7 +554,7 @@ func BenchmarkFullEvent(b *testing.B) {
 	b.Run("tlv naïve", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, et := range tlvevents {
-				_ = decodeEventTLV(et.binary)
+				_, _ = decodeEventTLV(et.binary)
 			}
 		}
 	})
@@ -562,7 +562,7 @@ func BenchmarkFullEvent(b *testing.B) {
 	b.Run("leaner binary", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, et := range leanerEvents {
-				_ = leanerDecode(et.binary)
+				_, _ = leanerDecode(et.binary)
 			}
 		}
 	})
@@ -570,7 +570,7 @@ func BenchmarkFullEvent(b *testing.B) {
 	b.Run("leaner binary to stringified", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, et := range leanerEvents {
-				ev := leanerDecode(et.binary)
+				ev, _ := leanerDecode(et.binary)
 				ev.ToNormal()
 			}
 		}
@@ -579,7 +579,7 @@ func BenchmarkFullEvent(b *testing.B) {
 	b.Run("nson", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
-				_ = decodeNson(evtstr)
+				_, _ = decodeNson(evtstr)
 			}
 		}
 	})
@@ -845,7 +845,7 @@ func BenchmarkEnvelope(b *testing.B) {
 				switch v.Get("0").Str {
 				case "EVENT":
 					_ = v.Get("1").Str
-					_ = decodeNson(v.Get("2").Raw)
+					_, _ = decodeNson(v.Get("2").Raw)
 				case "OK":
 					_ = v.Get("1").Str
 					_ = v.Get("2").Bool()
@@ -903,7 +903,7 @@ func BenchmarkEnvelope(b *testing.B) {
 					_, _ = snd.StrictString()
 					thr, _ := searcher.GetByPath(2)
 					third, _ := thr.Raw()
-					_ = decodeNson(third)
+					_, _ = decodeNson(third)
 				case "OK":
 					snd, _ := searcher.GetByPath(1)
 					_, _ = snd.StrictString()

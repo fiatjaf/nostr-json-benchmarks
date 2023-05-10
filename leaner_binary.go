@@ -2,10 +2,18 @@ package benchmarks
 
 import (
 	"encoding/binary"
+	"fmt"
 )
 
-func leanerDecode(data []byte) *EventBinary {
-	var evt EventBinary
+func leanerDecode(data []byte) (evt *EventBinary, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("failed to decode nson: %v", r)
+		}
+	}()
+
+	evt = &EventBinary{}
+
 	evt.ID = data[0:32]
 	evt.PubKey = data[32:64]
 	evt.Sig = data[64:128]
@@ -34,7 +42,7 @@ func leanerDecode(data []byte) *EventBinary {
 		evt.Tags[t] = tag
 	}
 
-	return &evt
+	return evt, err
 }
 
 func leanerEncode(evt *EventBinary) []byte {

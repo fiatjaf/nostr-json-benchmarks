@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 )
 
 const (
@@ -16,8 +17,14 @@ const (
 	TLVSig       uint8 = 6
 )
 
-func decodeEventTLV(data []byte) *Event {
-	var evt Event
+func decodeEventTLV(data []byte) (evt *Event, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("failed to decode tlv: %v", r)
+		}
+	}()
+
+	evt = &Event{}
 	curr := 0
 	for {
 		t, v := readTLVEntry(data[curr:])
@@ -47,7 +54,7 @@ func decodeEventTLV(data []byte) *Event {
 		curr = curr + 3 + len(v)
 	}
 
-	return &evt
+	return evt, err
 }
 
 func readTLVEntry(data []byte) (typ uint8, value []byte) {
