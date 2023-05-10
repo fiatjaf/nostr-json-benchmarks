@@ -3,9 +3,7 @@ package benchmarks
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/buger/jsonparser"
@@ -39,9 +37,9 @@ func BenchmarkShortEvent(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				v := gjson.Parse(evtstr)
-				v.Get("content").String()
-				v.Get("created_at").Int()
-				v.Get("pubkey").String()
+				_ = v.Get("content").Str
+				_ = Timestamp(v.Get("created_at").Num)
+				_ = v.Get("pubkey").Str
 			}
 		}
 	})
@@ -297,16 +295,16 @@ func BenchmarkFullEvent(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {
 				v := gjson.Parse(evtstr)
-				v.Get("kind").Int()
-				v.Get("content").String()
-				v.Get("created_at").Int()
-				v.Get("pubkey").String()
+				_ = v.Get("kind").Num
+				_ = v.Get("content").Str
+				_ = Timestamp(v.Get("created_at").Num)
+				_ = v.Get("pubkey").Str
 				v.Get("tags").ForEach(func(_, v gjson.Result) bool {
-					v.Get("1").String()
+					_ = v.Get("1").Str
 					return true
 				})
-				v.Get("sig").String()
-				v.Get("id").String()
+				_ = v.Get("sig").Str
+				_ = v.Get("id").Str
 			}
 		}
 	})
@@ -316,10 +314,10 @@ func BenchmarkFullEvent(b *testing.B) {
 			for _, evtstr := range events {
 				var event Event
 				v := gjson.Parse(evtstr)
-				event.Kind = int(v.Get("kind").Int())
-				event.Content = v.Get("content").String()
-				event.CreatedAt = Timestamp(v.Get("created_at").Int())
-				event.PubKey = v.Get("pubkey").String()
+				event.Kind = int(v.Get("kind").Num)
+				event.Content = v.Get("content").Str
+				event.CreatedAt = Timestamp(v.Get("created_at").Num)
+				event.PubKey = v.Get("pubkey").Str
 				v.Get("tags").ForEach(func(_, v gjson.Result) bool {
 					tag := make([]string, 0, 4)
 					v.ForEach(func(_, v gjson.Result) bool {
@@ -329,8 +327,8 @@ func BenchmarkFullEvent(b *testing.B) {
 					event.Tags = append(event.Tags, tag)
 					return true
 				})
-				event.Sig = v.Get("sig").String()
-				event.ID = v.Get("id").String()
+				event.Sig = v.Get("sig").Str
+				event.ID = v.Get("id").Str
 			}
 		}
 	})
