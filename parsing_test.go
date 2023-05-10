@@ -46,14 +46,27 @@ func TestNson(t *testing.T) {
 
 func TestTLV(t *testing.T) {
 	for _, te := range loadEventsTLV() {
-		evt := decodeEventTLV(te.tlv)
+		evt := decodeEventTLV(te.binary)
 		if evt == nil {
-			t.Errorf("failed to parse '%v'", te.tlv)
+			t.Errorf("failed to parse '%v'", te.binary)
 		}
 		jevt, _ := json.Marshal(te.event)
 
 		// fmt.Println("\n\ncomparing:\n", string(jevt), "\n~\n", evt)
 		checkParsedCorrectly(t, string(jevt), evt)
+	}
+}
+
+func TestLeanerBinary(t *testing.T) {
+	for _, te := range loadEventsLeaner() {
+		evt := leanerDecode(te.binary)
+		if evt == nil {
+			t.Errorf("failed to parse '%v'", te.binary)
+		}
+		jevt, _ := json.Marshal(te.event)
+
+		// fmt.Println("\n\ncomparing:\n", string(jevt), "\n~\n", evt)
+		checkParsedCorrectly(t, string(jevt), evt.ToNormal())
 	}
 }
 

@@ -82,19 +82,31 @@ func loadEvents() []string {
 	return events
 }
 
-type tlvEvent struct {
-	tlv   []byte
-	event *Event
+type binaryEvent struct {
+	binary []byte
+	event  *Event
 }
 
-func loadEventsTLV() []tlvEvent {
+func loadEventsTLV() []binaryEvent {
 	events := loadEvents()
-	payloads := make([]tlvEvent, len(events))
+	payloads := make([]binaryEvent, len(events))
 	for i, evtstr := range events {
 		evt := &Event{}
 		json.Unmarshal([]byte(evtstr), evt)
 		payloads[i].event = evt
-		payloads[i].tlv = encodeEventTLV(evt)
+		payloads[i].binary = encodeEventTLV(evt)
+	}
+	return payloads
+}
+
+func loadEventsLeaner() []binaryEvent {
+	events := loadEvents()
+	payloads := make([]binaryEvent, len(events))
+	for i, evtstr := range events {
+		evt := &Event{}
+		json.Unmarshal([]byte(evtstr), evt)
+		payloads[i].event = evt
+		payloads[i].binary = leanerEncode(evt.ToBinary())
 	}
 	return payloads
 }

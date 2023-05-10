@@ -1,6 +1,7 @@
 package benchmarks
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"time"
 )
@@ -20,6 +21,19 @@ type Event struct {
 func (e Event) String() string {
 	b, _ := json.Marshal(e)
 	return string(b)
+}
+
+func (e Event) ToBinary() *EventBinary {
+	eb := &EventBinary{
+		Kind:      e.Kind,
+		CreatedAt: e.CreatedAt,
+		Content:   e.Content,
+		Tags:      e.Tags,
+	}
+	eb.ID, _ = hex.DecodeString(e.ID)
+	eb.PubKey, _ = hex.DecodeString(e.PubKey)
+	eb.Sig, _ = hex.DecodeString(e.Sig)
+	return eb
 }
 
 type Timestamp int64
@@ -48,3 +62,26 @@ type (
 	Tags []Tag
 	Tag  []string
 )
+
+type EventBinary struct {
+	Kind      int
+	CreatedAt Timestamp
+	Content   string
+	PubKey    []byte
+	Sig       []byte
+	ID        []byte
+	Tags      Tags
+}
+
+func (e EventBinary) ToNormal() *Event {
+	en := &Event{
+		Kind:      e.Kind,
+		CreatedAt: e.CreatedAt,
+		Content:   e.Content,
+		Tags:      e.Tags,
+	}
+	en.ID = hex.EncodeToString(e.ID)
+	en.PubKey = hex.EncodeToString(e.PubKey)
+	en.Sig = hex.EncodeToString(e.Sig)
+	return en
+}
