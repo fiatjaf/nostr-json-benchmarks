@@ -69,15 +69,3 @@ func TestLeanerBinary(t *testing.T) {
 		checkParsedCorrectly(t, string(jevt), evt.ToNormal())
 	}
 }
-
-// this is currently broken:
-// func TestCustomParser(t *testing.T) {
-// 	for _, jevt := range loadEvents() {
-// 		evt, err := parseEvent(jevt)
-// 		if err != nil {
-// 			t.Errorf("failed to parse '%s': %s", jevt, err)
-// 		}
-//
-// 		checkParsedCorrectly(t, jevt, evt)
-// 	}
-// }
