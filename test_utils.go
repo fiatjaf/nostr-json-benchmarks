@@ -2,6 +2,7 @@ package benchmarks
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -107,4 +108,13 @@ func loadEventsNson() []string {
 		payloads[i] = encodeNson(evt)
 	}
 	return payloads
+}
+
+func loadEnvelopes() []string {
+	events := loadEventsNson()
+	envelopes := make([]string, len(events))
+	for i, evtstr := range events {
+		envelopes[i] = fmt.Sprintf(`["EVENT","_",%s]`, evtstr)
+	}
+	return envelopes
 }

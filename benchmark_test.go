@@ -22,7 +22,7 @@ import (
 
 func BenchmarkShortEvent(b *testing.B) {
 	sonic.Pretouch(reflect.TypeOf(EventShort{}))
-	events := loadEvents()
+	events := loadEventsNson()
 
 	b.Run("json.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -168,7 +168,7 @@ func BenchmarkShortEvent(b *testing.B) {
 }
 
 func BenchmarkLazyEvent(b *testing.B) {
-	events := loadEvents()
+	events := loadEventsNson()
 
 	doStuff1 := func(l LazyEvent) {
 		l.ID()
@@ -289,9 +289,8 @@ func BenchmarkLazyEvent(b *testing.B) {
 
 func BenchmarkFullEvent(b *testing.B) {
 	sonic.Pretouch(reflect.TypeOf(Event{}))
-	events := loadEvents()
+	events := loadEventsNson()
 	tlvevents := loadEventsTLV()
-	nsonevents := loadEventsNson()
 
 	b.Run("json.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -541,15 +540,15 @@ func BenchmarkFullEvent(b *testing.B) {
 	b.Run("tlv binary", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, et := range tlvevents {
-				decodeEventTLV(et.tlv)
+				_ = decodeEventTLV(et.tlv)
 			}
 		}
 	})
 
 	b.Run("nson", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			for _, evtstr := range nsonevents {
-				decodeNson(evtstr)
+			for _, evtstr := range events {
+				_ = decodeNson(evtstr)
 			}
 		}
 	})
@@ -562,7 +561,7 @@ func BenchmarkEnvelope(b *testing.B) {
 		UseInt64:             true,
 		NoNullSliceOrMap:     true,
 	}.Froze()
-	lines := loadLines()
+	lines := loadEnvelopes()
 
 	b.Run("json.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -808,14 +807,14 @@ func BenchmarkEnvelope(b *testing.B) {
 		}
 	})
 
-	b.Run("gjson + custom", func(b *testing.B) {
+	b.Run("gjson + nson", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, line := range lines {
 				v := gjson.Parse(line)
 				switch v.Get("0").Str {
 				case "EVENT":
 					_ = v.Get("1").Str
-					parseEvent(v.Get("2").Raw)
+					_ = decodeNson(v.Get("2").Raw)
 				case "OK":
 					_ = v.Get("1").Str
 					_ = v.Get("2").Bool()
@@ -843,6 +842,37 @@ func BenchmarkEnvelope(b *testing.B) {
 					third, _ := thr.Raw()
 					var event Event
 					easyjson.Unmarshal([]byte(third), &event)
+				case "OK":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+					thr, _ := searcher.GetByPath(2)
+					_, _ = thr.Bool()
+					fth, _ := searcher.GetByPath(3)
+					_, _ = fth.StrictString()
+				case "EOSE":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+				case "NOTICE":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+				}
+			}
+		}
+	})
+
+	b.Run("sonic + nson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, line := range lines {
+				searcher := ast.NewSearcher(line)
+				fst, _ := searcher.GetByPath(0)
+				first, _ := fst.StrictString()
+				switch first {
+				case "EVENT":
+					snd, _ := searcher.GetByPath(1)
+					_, _ = snd.StrictString()
+					thr, _ := searcher.GetByPath(2)
+					third, _ := thr.Raw()
+					_ = decodeNson(third)
 				case "OK":
 					snd, _ := searcher.GetByPath(1)
 					_, _ = snd.StrictString()
