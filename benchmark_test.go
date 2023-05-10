@@ -44,6 +44,16 @@ func BenchmarkShortEvent(b *testing.B) {
 		}
 	})
 
+	b.Run("nson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				_ = nsonGetContent(evtstr)
+				_ = nsonGetCreatedAt(evtstr)
+				_ = nsonGetPubkey(evtstr)
+			}
+		}
+	})
+
 	b.Run("jsonparser", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, evtstr := range events {

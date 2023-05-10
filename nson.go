@@ -136,3 +136,39 @@ func encodeNson(evt *Event) string {
 
 	return base.String()
 }
+
+// partial getters
+func nsonGetID(data string) string     { return data[7 : 7+64] }
+func nsonGetPubkey(data string) string { return data[83 : 83+64] }
+func nsonGetSig(data string) string    { return data[156 : 156+128] }
+func nsonGetCreatedAt(data string) Timestamp {
+	ts, _ := strconv.ParseInt(data[299:299+10], 10, 64)
+	return Timestamp(ts)
+}
+
+func nsonGetKind(data string) int {
+	nsonSizeBytes, _ := hex.DecodeString(data[318 : 318+2])
+	nsonSize := int(nsonSizeBytes[0])
+	nsonDescriptors, _ := hex.DecodeString(data[320 : 320+nsonSize])
+
+	kindChars := int(nsonDescriptors[0])
+	kindStart := 320 + nsonSize + 9 // len(`","kind":`)
+	kind, _ := strconv.Atoi(data[kindStart : kindStart+kindChars])
+
+	return kind
+}
+
+func nsonGetContent(data string) string {
+	nsonSizeBytes, _ := hex.DecodeString(data[318 : 318+2])
+	nsonSize := int(nsonSizeBytes[0])
+	nsonDescriptors, _ := hex.DecodeString(data[320 : 320+nsonSize])
+
+	kindChars := int(nsonDescriptors[0])
+	kindStart := 320 + nsonSize + 9 // len(`","kind":`)
+
+	contentChars := int(binary.BigEndian.Uint16(nsonDescriptors[1:3]))
+	contentStart := kindStart + kindChars + 12 // len(`,"content":"`)
+	content, _ := strconv.Unquote(`"` + data[contentStart:contentStart+contentChars] + `"`)
+
+	return content
+}

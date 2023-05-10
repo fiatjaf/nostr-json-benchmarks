@@ -15,3 +15,28 @@ func TestBasicNsonParse(t *testing.T) {
 		checkParsedCorrectly(t, jevt, evt)
 	}
 }
+
+func TestNsonPartialGet(t *testing.T) {
+	for _, jevt := range nsonTestEvents {
+		evt := decodeNson(jevt)
+
+		if id := nsonGetID(jevt); id != evt.ID {
+			t.Error("partial id wrong")
+		}
+		if pubkey := nsonGetPubkey(jevt); pubkey != evt.PubKey {
+			t.Error("partial pubkey wrong")
+		}
+		if sig := nsonGetSig(jevt); sig != evt.Sig {
+			t.Error("partial sig wrong")
+		}
+		if createdAt := nsonGetCreatedAt(jevt); createdAt != evt.CreatedAt {
+			t.Error("partial created_at wrong")
+		}
+		if kind := nsonGetKind(jevt); kind != evt.Kind {
+			t.Error("partial kind wrong")
+		}
+		if content := nsonGetContent(jevt); content != evt.Content {
+			t.Error("partial content wrong")
+		}
+	}
+}
