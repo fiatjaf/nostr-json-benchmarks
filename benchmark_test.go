@@ -285,6 +285,19 @@ func BenchmarkLazyEvent(b *testing.B) {
 			})
 		}
 	})
+
+	b.Run("nson", func(b *testing.B) {
+		for i, doStuff := range actions {
+			b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					for _, evtstr := range events {
+						l := &LazyEventNson{evtstr}
+						doStuff(l)
+					}
+				}
+			})
+		}
+	})
 }
 
 func BenchmarkFullEvent(b *testing.B) {
