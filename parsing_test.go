@@ -51,6 +51,8 @@ func TestTLV(t *testing.T) {
 			t.Errorf("failed to parse '%v'", te.tlv)
 		}
 		jevt, _ := json.Marshal(te.event)
+
+		// fmt.Println("\n\ncomparing:\n", string(jevt), "\n~\n", evt)
 		checkParsedCorrectly(t, string(jevt), evt)
 	}
 }

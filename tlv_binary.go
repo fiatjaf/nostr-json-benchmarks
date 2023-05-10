@@ -105,22 +105,19 @@ func encodeTags(tags Tags) []byte {
 }
 
 func decodeTags(buf []byte) Tags {
-	tags := make(Tags, 0, 4)
+	tags := make(Tags, 0, 256)
 	reader := bytes.NewReader(buf)
 	for {
 		n, err := reader.ReadByte()
 		if err != nil {
 			return tags
 		}
-		tag := make(Tag, n)
+		tag := make(Tag, 0, 256)
 		for i := 0; i < int(n); i++ {
 			itemSize, _ := reader.ReadByte()
-			if itemSize == 0 {
-				continue
-			}
 			data := make([]byte, itemSize)
 			reader.Read(data)
-			tag = append(tag, string(itemSize))
+			tag = append(tag, string(data))
 		}
 		tags = append(tags, tag)
 	}
