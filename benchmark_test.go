@@ -280,7 +280,8 @@ func BenchmarkLazyEvent(b *testing.B) {
 func BenchmarkFullEvent(b *testing.B) {
 	sonic.Pretouch(reflect.TypeOf(Event{}))
 	events := loadEvents()
-	payloads := loadEventsTLV()
+	tlvevents := loadEventsTLV()
+	nsonevents := loadEventsNson()
 
 	b.Run("json.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -527,18 +528,18 @@ func BenchmarkFullEvent(b *testing.B) {
 		}
 	})
 
-	b.Run("custom", func(b *testing.B) {
+	b.Run("tlv binary", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			for _, evtstr := range events {
-				parseEvent(evtstr)
+			for _, et := range tlvevents {
+				decodeEventTLV(et.tlv)
 			}
 		}
 	})
 
-	b.Run("tlv binary", func(b *testing.B) {
+	b.Run("nson", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			for _, et := range payloads {
-				decodeEventTLV(et.tlv)
+			for _, evtstr := range nsonevents {
+				decodeNson(evtstr)
 			}
 		}
 	})
