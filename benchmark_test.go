@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/amosmzhang/rapidjson"
 	"github.com/buger/jsonparser"
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
@@ -162,6 +163,24 @@ func BenchmarkShortEvent(b *testing.B) {
 
 					return nil
 				})
+			}
+		}
+	})
+
+	b.Run("rapidjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				doc, _ := rapidjson.NewParsedStringJson(evtstr)
+				c := doc.GetContainer()
+
+				content, _ := c.GetMember("content")
+				_, _ = content.GetString()
+
+				createdAt, _ := c.GetMember("created_at")
+				_, _ = createdAt.GetInt64()
+
+				pubkey, _ := c.GetMember("pubkey")
+				_, _ = pubkey.GetString()
 			}
 		}
 	})
@@ -496,6 +515,37 @@ func BenchmarkFullEvent(b *testing.B) {
 						}
 						evt.Tags = append(evt.Tags, tag)
 					}
+				}
+			}
+		}
+	})
+
+	b.Run("rapidjson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, evtstr := range events {
+				evt := Event{}
+				doc, _ := rapidjson.NewParsedStringJson(evtstr)
+				c := doc.GetContainer()
+
+				id, _ := c.GetMember("id")
+				evt.ID, _ = id.GetString()
+				pubkey, _ := c.GetMember("pubkey")
+				evt.PubKey, _ = pubkey.GetString()
+				sig, _ := c.GetMember("sig")
+				evt.Sig, _ = sig.GetString()
+				createdAt, _ := c.GetMember("created_at")
+				createdAtInt64, _ := createdAt.GetInt64()
+				evt.CreatedAt = Timestamp(createdAtInt64)
+				content, _ := c.GetMember("content")
+				evt.Content, _ = content.GetString()
+
+				tagsv, _ := c.GetMember("tags")
+				tagcs, _, _ := tagsv.GetArray()
+
+				evt.Tags = make(Tags, len(tagcs))
+				for t, tagc := range tagcs {
+					item, _ := tagc.GetStringArray()
+					evt.Tags[t] = Tag(item)
 				}
 			}
 		}

@@ -3,6 +3,7 @@ module github.com/fiatjaf/nostr-json-benchmarks
 go 1.19
 
 require (
+	github.com/amosmzhang/rapidjson v1.2.1
 	github.com/buger/jsonparser v1.1.1
 	github.com/bytedance/sonic v1.8.7
 	github.com/goccy/go-json v0.10.2
