@@ -8,7 +8,7 @@ import (
 func leanerDecode(data []byte) (evt *EventBinary, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to decode nson: %v", r)
+			err = fmt.Errorf("failed to decode leaner: %v", r)
 		}
 	}()
 
@@ -47,7 +47,7 @@ func leanerDecode(data []byte) (evt *EventBinary, err error) {
 
 func leanerEncode(evt *EventBinary) []byte {
 	content := []byte(evt.Content)
-	buf := make([]byte, 32+32+64+4+2+2+len(content)+65500)
+	buf := make([]byte, 32+32+64+4+2+2+len(content)+65536 /* blergh */)
 	copy(buf[0:32], evt.ID)
 	copy(buf[32:64], evt.PubKey)
 	copy(buf[64:128], evt.Sig)
@@ -71,6 +71,7 @@ func leanerEncode(evt *EventBinary) []byte {
 			curr = itemEnd
 		}
 	}
+	buf = buf[0 : curr+1]
 
 	return buf
 }
