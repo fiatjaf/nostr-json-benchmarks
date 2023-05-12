@@ -3,7 +3,6 @@
 each "operation" in these benchmarks consists in decoding 35 events taken at a random time from random relays and stored at `data.json`.
 
 - `BenchmarkShortEvent` is only decoding 3 fields from the event: `"created_at"`, `"content"` and `"pubkey"`.
-- `BenchmarkLazyEvent` is not really decoding the full JSON, but instead storing a reference to it _somehow_ and then decoding only the requested fields when they are requested by a getter, this is only possible in some libraries and there are simulations with results being cached for further access, not cached at all or event being a fake lazy that actually decodes the full object first, then returns the decoded stuff from the getters.
 - `BenchmarkFullEvent` is turning JSON into a struct (except on the case of `tlv_naïve` and `leaner_*` which take a binary-encoded format that isn't JSON).
 - `BenchmarkEnvelope` is turning a relay message like `["EVENT", "_", {...}]` into a struct -- instead of just the event -- in this case multiple combinations of libraries are used sometimes, some for going through the array elements and others for actually decoding the event JSON.
 
@@ -24,21 +23,6 @@ BenchmarkShortEvent/sonic-4                               	    6135	    207432 n
 BenchmarkShortEvent/sonic/get-4                           	   24450	     43874 ns/op
 BenchmarkShortEvent/sonic/searcher/get-4                  	   24254	     45064 ns/op
 BenchmarkShortEvent/simdjson-4                            	     811	   1268456 ns/op
-BenchmarkLazyEvent/gjson/0-4                              	    7882	    136017 ns/op
-BenchmarkLazyEvent/gjson/1-4                              	    5863	    185066 ns/op
-BenchmarkLazyEvent/gjson/2-4                              	    6666	    178632 ns/op
-BenchmarkLazyEvent/gjson-megalazy/0-4                     	   10000	    130486 ns/op
-BenchmarkLazyEvent/gjson-megalazy/1-4                     	    7506	    154514 ns/op
-BenchmarkLazyEvent/gjson-megalazy/2-4                     	    6681	    192879 ns/op
-BenchmarkLazyEvent/sonic/0-4                              	   17187	     68165 ns/op
-BenchmarkLazyEvent/sonic/1-4                              	   13932	     85942 ns/op
-BenchmarkLazyEvent/sonic/2-4                              	   13512	     92314 ns/op
-BenchmarkLazyEvent/sonic-megalazy/0-4                     	   23425	     52375 ns/op
-BenchmarkLazyEvent/sonic-megalazy/1-4                     	   10000	    191604 ns/op
-BenchmarkLazyEvent/sonic-megalazy/2-4                     	    2872	    350604 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/0-4                     	    7974	    260663 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/1-4                     	    5056	    254248 ns/op
-BenchmarkLazyEvent/sonic-not-lazy/2-4                     	    4509	    258375 ns/op
 BenchmarkFullEvent/json.Unmarshal-4                       	    2103	    477904 ns/op
 BenchmarkFullEvent/gjson-4                                	    5670	    203253 ns/op
 BenchmarkFullEvent/gjson_assign-4                         	    4414	    238856 ns/op

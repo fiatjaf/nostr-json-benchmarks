@@ -48,16 +48,6 @@ type EventShort struct {
 	PubKey    string `json:"pubkey"`
 }
 
-type LazyEvent interface {
-	Kind() int
-	CreatedAt() time.Time
-	Content() string
-	PubKey() string
-	Sig() string
-	ID() string
-	// Tags() [][]string
-}
-
 type (
 	Tags []Tag
 	Tag  []string
