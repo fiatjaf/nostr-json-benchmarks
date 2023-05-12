@@ -1,6 +1,8 @@
 package benchmarks
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -39,4 +41,34 @@ func TestNsonPartialGet(t *testing.T) {
 			t.Error("partial content wrong")
 		}
 	}
+}
+
+func TestEncodeNson(t *testing.T) {
+	jevt := `{
+  "content": "hello world",
+  "created_at": 1683762317,
+  "id": "57ff66490a6a2af3992accc26ae95f3f60c6e5f84ed0ddf6f59c534d3920d3d2",
+  "kind": 1,
+  "pubkey": "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+  "sig": "504d142aed7fa7e0f6dab5bcd7eed63963b0277a8e11bbcb03b94531beb4b95a12f1438668b02746bd5362161bc782068e6b71494060975414e793f9e19f57ea",
+  "tags": [
+    [
+      "e",
+      "b6de44a9dd47d1c000f795ea0453046914f44ba7d5e369608b04867a575ea83e",
+      "reply"
+    ],
+    [
+      "p",
+      "c26f7b252cea77a5b94f42b1a4771021be07d4df766407e47738605f7e3ab774",
+      "",
+      "wss://relay.damus.io"
+    ]
+  ]
+}`
+
+	evt := &Event{}
+	json.Unmarshal([]byte(jevt), evt)
+
+	nevt := encodeNson(evt)
+	fmt.Println(nevt)
 }
