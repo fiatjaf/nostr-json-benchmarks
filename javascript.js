@@ -79,14 +79,16 @@ function leanerDecode(data) {
   let evt = {}
   let err = null
 
+  let buffer = data.buffer
+
   try {
-    evt.ID = data.buffer.slice(0, 32)
-    evt.PubKey = data.buffer.slice(32, 64)
-    evt.Sig = data.buffer.slice(64, 128)
+    evt.ID = buffer.slice(0, 32)
+    evt.PubKey = buffer.slice(32, 64)
+    evt.Sig = buffer.slice(64, 128)
     evt.CreatedAt = data.getUint32(128)
     evt.Kind = data.getUint16(132)
     let contentLength = data.getUint16(134)
-    evt.Content = data.buffer.slice(136, 136 + contentLength).toString()
+    evt.Content = buffer.slice(136, 136 + contentLength).toString()
 
     let curr = 136 + contentLength
     let ntags = data.getUint8(curr)
@@ -101,7 +103,7 @@ function leanerDecode(data) {
         let itemSize = data.getUint16(curr)
         let itemStart = curr + 2
         let itemEnd = itemStart + itemSize
-        let item = data.buffer.slice(itemStart, itemEnd).toString()
+        let item = buffer.slice(itemStart, itemEnd).toString()
         tag[i] = item
         curr = itemEnd
       }
