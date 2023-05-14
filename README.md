@@ -64,9 +64,9 @@ this repository also contains the `tlv_naïve`, `leaner_binary` and `nson` imple
 the `javascript.js` file has a decoder for `leaner` and one for `nson`, which are benchmarked in comparison with `JSON.parse`. these are the results:
 
 ```
-JSON.parse    1.77 µs/iter
-decodeNson    1.99 µs/iter
-leanerDecode  8.77 µs/iter
+JSON.parse    1.84 µs/iter
+decodeNson    1.98 µs/iter
+leanerDecode  4.94 µs/iter
 ```
 
 the only issue there is that the nson decoder is not doing string unescaping, which makes it slighly faster than it should be, but since it is already worse than `JSON.parse` without that I didn't bother to implement that.

@@ -21,9 +21,9 @@ Deno.test('nson and leaner match JSON.parse', () => {
     ld,
     {
       ...jp,
-      id: hexToBytes(jp.id),
-      pubkey: hexToBytes(jp.pubkey),
-      sig: hexToBytes(jp.sig)
+      id: Uint8Array.from(hexToBytes(jp.id)),
+      pubkey: Uint8Array.from(hexToBytes(jp.pubkey)),
+      sig: Uint8Array.from(hexToBytes(jp.sig))
     },
     'binary does not match'
   )
@@ -95,43 +95,36 @@ function decodeNson(data) {
   return [evt, err]
 }
 
-function leanerDecode(buffer) {
+function leanerDecode(data) {
   let evt = {}
   let err = null
+  let buffer = Uint8Array.from(data).buffer
 
   try {
-    evt.id = buffer.slice(0, 32)
-    evt.pubkey = buffer.slice(32, 64)
-    evt.sig = buffer.slice(64, 128)
+    evt.id = new Uint8Array(buffer, 0, 32)
+    evt.pubkey = new Uint8Array(buffer, 32, 32)
+    evt.sig = new Uint8Array(buffer, 64, 64)
     evt.created_at =
-      (buffer[128] << 24) |
-      (buffer[129] << 16) |
-      (buffer[130] << 8) |
-      buffer[131]
-    evt.kind = (buffer[132] << 8) | buffer[133]
-    let contentLength = (buffer[134] << 8) | buffer[135]
-    evt.content = utf8.decode(
-      Uint8Array.from(buffer.slice(136, 136 + contentLength))
-    )
+      (data[128] << 24) | (data[129] << 16) | (data[130] << 8) | data[131]
+    evt.kind = (data[132] << 8) | data[133]
+    let contentLength = (data[134] << 8) | data[135]
+    evt.content = utf8.decode(new Uint8Array(buffer, 136, contentLength))
 
     let curr = 136 + contentLength
-    let ntags = buffer[curr]
+    let ntags = data[curr]
     evt.tags = new Array(ntags)
 
     for (let t = 0; t < evt.tags.length; t++) {
       curr = curr + 1
-      let nItems = buffer[curr]
+      let nItems = data[curr]
       let tag = new Array(nItems)
       for (let i = 0; i < tag.length; i++) {
         curr = curr + 1
-        let itemSize = (buffer[curr] << 8) | buffer[curr + 1]
+        let itemSize = (data[curr] << 8) | data[curr + 1]
         let itemStart = curr + 2
-        let itemEnd = itemStart + itemSize
-        let item = utf8.decode(
-          Uint8Array.from(buffer.slice(itemStart, itemEnd))
-        )
+        let item = utf8.decode(new Uint8Array(buffer, itemStart, itemSize))
         tag[i] = item
-        curr = itemEnd
+        curr = itemStart + itemSize
       }
       evt.tags[t] = tag
     }
