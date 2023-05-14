@@ -58,3 +58,17 @@ this repository also contains the `tlv_naïve`, `leaner_binary` and `nson` imple
 - `tlv_naïve` is just what happens when a beginner Go programmer tries to turn JSON into TLV in a somewhat-generic way.
 - `leaner_binary` is the most optimized custom and yet very simple hand implementation I could do without doing any of the raw memory pointer access that probably cap'n'proto and others would.
 - `nson` is a nice gimmick that gives a performance boost to normal JSON as long as the JSON creator is building the JSON object in a special way. The reader doesn't have to read it in a special way or be aware of the nsonic nature of the JSON blob it just got, though, therefore it is backwards-compatible.
+
+## javascript tests
+
+the `javascript.js` file has a decoder for `leaner` and one for `nson`, which are benchmarked in comparison with `JSON.parse`. these are the results:
+
+```
+JSON.parse    1.77 µs/iter
+decodeNson    1.99 µs/iter
+leanerDecode  8.77 µs/iter
+```
+
+the only issue there is that the nson decoder is not doing string unescaping, which makes it slighly faster than it should be, but since it is already worse than `JSON.parse` without that I didn't bother to implement that.
+
+this shows that for javascript apps it makes no sense to implement binary encoding -- but that NSON is fine as it can just be ignored at all times.
