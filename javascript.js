@@ -1,13 +1,33 @@
 /* globals Deno */
 
+import {assertObjectMatch} from 'https://deno.land/std@0.183.0/testing/asserts.ts'
+
 const eventString = `{"id":"ae1fc7154296569d87ca4663f6bdf448c217d1590d28c85d158557b8b43b4d69","pubkey":"79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798","sig":"94e10947814b1ebe38af42300ecd90c7642763896c4f69506ae97bfdf54eec3c0c21df96b7d95daa74ff3d414b1d758ee95fc258125deebc31df0c6ba9396a51","created_at":1683660344,"nson":"2805000b0203000100400005040001004000000014","kind":30023,"content":"hello hello","tags":[["e","b6de44a9dd47d1c000f795ea0453046914f44ba7d5e369608b04867a575ea83e","reply"],["p","c26f7b252cea77a5b94f42b1a4771021be07d4df766407e47738605f7e3ab774","","wss://relay.damus.io"]]}`
-const eventBinary = new DataView(
-  Uint8Array.from(
-    hexToBytes(
-      `ae1fc7154296569d87ca4663f6bdf448c217d1590d28c85d158557b8b43b4d6979be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8179894e10947814b1ebe38af42300ecd90c7642763896c4f69506ae97bfdf54eec3c0c21df96b7d95daa74ff3d414b1d758ee95fc258125deebc31df0c6ba9396a51645a9e387547000b68656c6c6f2068656c6c6f0203000165000040623664653434613964643437643163303030663739356561303435333034363931346634346261376435653336393630386230343836376135373565613833650000057265706c790004000170000040633236663762323532636561373761356239346634326231613437373130323162653037643464663736363430376534373733383630356637653361623737340000000000147773733a2f2f72656c61792e64616d75732e696f`
-    )
-  ).buffer
+const eventBinary = hexToBytes(
+  `ae1fc7154296569d87ca4663f6bdf448c217d1590d28c85d158557b8b43b4d6979be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8179894e10947814b1ebe38af42300ecd90c7642763896c4f69506ae97bfdf54eec3c0c21df96b7d95daa74ff3d414b1d758ee95fc258125deebc31df0c6ba9396a51645a9e387547000b68656c6c6f2068656c6c6f0203000165000040623664653434613964643437643163303030663739356561303435333034363931346634346261376435653336393630386230343836376135373565613833650000057265706c790004000170000040633236663762323532636561373761356239346634326231613437373130323162653037643464663736363430376534373733383630356637653361623737340000000000147773733a2f2f72656c61792e64616d75732e696f`
 )
+
+let utf8 = new TextDecoder('utf-8')
+
+Deno.test('nson and leaner match JSON.parse', () => {
+  let jp = JSON.parse(eventString)
+  delete jp.nson
+
+  let [dn] = decodeNson(eventString)
+  assertObjectMatch(dn, jp, 'nson does not match')
+
+  let [ld] = leanerDecode(eventBinary)
+  assertObjectMatch(
+    ld,
+    {
+      ...jp,
+      id: hexToBytes(jp.id),
+      pubkey: hexToBytes(jp.pubkey),
+      sig: hexToBytes(jp.sig)
+    },
+    'binary does not match'
+  )
+})
 
 Deno.bench('JSON.parse', () => {
   JSON.parse(eventString)
@@ -26,11 +46,11 @@ function decodeNson(data) {
   let err = null
 
   try {
-    evt.ID = data.substring(7, 7 + 64)
-    evt.PubKey = data.substring(83, 83 + 64)
-    evt.Sig = data.substring(156, 156 + 128)
+    evt.id = data.substring(7, 7 + 64)
+    evt.pubkey = data.substring(83, 83 + 64)
+    evt.sig = data.substring(156, 156 + 128)
     let ts = parseInt(data.substring(299, 299 + 10), 10)
-    evt.CreatedAt = ts
+    evt.created_at = ts
 
     let nsonSizeBytes = hexToBytes(data.substring(318, 318 + 2))
     let nsonSize = nsonSizeBytes[0]
@@ -38,14 +58,14 @@ function decodeNson(data) {
 
     let kindChars = nsonDescriptors[0]
     let kindStart = 320 + nsonSize + 9
-    evt.Kind = parseInt(data.substring(kindStart, kindStart + kindChars))
+    evt.kind = parseInt(data.substring(kindStart, kindStart + kindChars))
 
     let contentChars = (nsonDescriptors[1] << 8) | nsonDescriptors[2]
     let contentStart = kindStart + kindChars + 12
-    evt.Content = data.substring(contentStart, contentStart + contentChars)
+    evt.content = data.substring(contentStart, contentStart + contentChars)
 
     let nTags = nsonDescriptors[3]
-    evt.Tags = new Array(nTags)
+    evt.tags = new Array(nTags)
     let tagsStart = contentStart + contentChars + 9
 
     let nsonIndex = 3
@@ -65,7 +85,7 @@ function decodeNson(data) {
         tagsIndex = itemStart + itemChars + 1
       }
       tagsIndex += 1
-      evt.Tags[t] = tag
+      evt.tags[t] = tag
     }
   } catch (e) {
     err = new Error('failed to decode nson: ' + e)
@@ -75,39 +95,45 @@ function decodeNson(data) {
   return [evt, err]
 }
 
-function leanerDecode(data) {
+function leanerDecode(buffer) {
   let evt = {}
   let err = null
 
-  let buffer = data.buffer
-
   try {
-    evt.ID = buffer.slice(0, 32)
-    evt.PubKey = buffer.slice(32, 64)
-    evt.Sig = buffer.slice(64, 128)
-    evt.CreatedAt = data.getUint32(128)
-    evt.Kind = data.getUint16(132)
-    let contentLength = data.getUint16(134)
-    evt.Content = buffer.slice(136, 136 + contentLength).toString()
+    evt.id = buffer.slice(0, 32)
+    evt.pubkey = buffer.slice(32, 64)
+    evt.sig = buffer.slice(64, 128)
+    evt.created_at =
+      (buffer[128] << 24) |
+      (buffer[129] << 16) |
+      (buffer[130] << 8) |
+      buffer[131]
+    evt.kind = (buffer[132] << 8) | buffer[133]
+    let contentLength = (buffer[134] << 8) | buffer[135]
+    evt.content = utf8.decode(
+      Uint8Array.from(buffer.slice(136, 136 + contentLength))
+    )
 
     let curr = 136 + contentLength
-    let ntags = data.getUint8(curr)
-    evt.Tags = new Array(ntags)
+    let ntags = buffer[curr]
+    evt.tags = new Array(ntags)
 
-    for (let t = 0; t < evt.Tags.length; t++) {
+    for (let t = 0; t < evt.tags.length; t++) {
       curr = curr + 1
-      let nItems = data.getUint8(curr)
+      let nItems = buffer[curr]
       let tag = new Array(nItems)
       for (let i = 0; i < tag.length; i++) {
         curr = curr + 1
-        let itemSize = data.getUint16(curr)
+        let itemSize = (buffer[curr] << 8) | buffer[curr + 1]
         let itemStart = curr + 2
         let itemEnd = itemStart + itemSize
-        let item = buffer.slice(itemStart, itemEnd).toString()
+        let item = utf8.decode(
+          Uint8Array.from(buffer.slice(itemStart, itemEnd))
+        )
         tag[i] = item
         curr = itemEnd
       }
-      evt.Tags[t] = tag
+      evt.tags[t] = tag
     }
   } catch (e) {
     err = new Error('failed to decode leaner: ' + e)
