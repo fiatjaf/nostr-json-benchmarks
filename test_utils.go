@@ -3,14 +3,15 @@ package benchmarks
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/nbd-wtf/go-nostr"
+	"golang.org/x/exp/rand"
 )
 
-func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) (isBad bool) {
+func checkParsedCorrectly(t *testing.T, jevt string, evt *nostr.Event) (isBad bool) {
 	var canonical nostr.Event
 	json.Unmarshal([]byte(jevt), &canonical)
 
@@ -34,7 +35,7 @@ func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) (isBad bool) {
 		t.Errorf("kind is wrong: %d != %d", evt.Kind, canonical.Kind)
 		isBad = true
 	}
-	if evt.CreatedAt != Timestamp(canonical.CreatedAt.Unix()) {
+	if evt.CreatedAt != canonical.CreatedAt {
 		t.Errorf("created_at is wrong: %v != %v", evt.CreatedAt, canonical.CreatedAt)
 		isBad = true
 	}
@@ -59,7 +60,7 @@ func checkParsedCorrectly(t *testing.T, jevt string, evt *Event) (isBad bool) {
 }
 
 func loadLines() []string {
-	b, err := ioutil.ReadFile("data.json")
+	b, err := os.ReadFile("data.json")
 	if err != nil {
 		panic(err)
 	}
@@ -69,64 +70,37 @@ func loadLines() []string {
 	return lines[0 : len(lines)-1]
 }
 
-func loadEvents() []string {
+func loadEvents() [][]byte {
 	lines := loadLines()
-	events := make([]string, 0, len(lines))
+	events := make([][]byte, 0, len(lines))
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "[\"EVENT") {
-			events = append(events, line[13:len(line)-1])
+			events = append(events, []byte(line[13:len(line)-1]))
 		}
 	}
 
 	return events
 }
 
-type binaryEvent struct {
-	binary []byte
-	event  *Event
-}
-
-func loadEventsTLV() []binaryEvent {
+func loadEnvelopes() [][]byte {
 	events := loadEvents()
-	payloads := make([]binaryEvent, len(events))
+	envelopes := make([][]byte, len(events), len(events)*15/10)
 	for i, evtstr := range events {
-		evt := &Event{}
-		json.Unmarshal([]byte(evtstr), evt)
-		payloads[i].event = evt
-		payloads[i].binary = encodeEventTLV(evt)
+		envelopes[i] = []byte(fmt.Sprintf(`["EVENT","_",%s]`, evtstr))
 	}
-	return payloads
-}
-
-func loadEventsLeaner() []binaryEvent {
-	events := loadEvents()
-	payloads := make([]binaryEvent, len(events))
-	for i, evtstr := range events {
-		evt := &Event{}
-		json.Unmarshal([]byte(evtstr), evt)
-		payloads[i].event = evt
-		payloads[i].binary = leanerEncode(evt.ToBinary())
+	for i := 0; i < len(events)/4; i++ {
+		envelopes = append(envelopes, []byte(`["EOSE", "_kjasbd"]`))
 	}
-	return payloads
-}
-
-func loadEventsNson() []string {
-	events := loadEvents()
-	payloads := make([]string, len(events))
-	for i, evtstr := range events {
-		evt := &Event{}
-		json.Unmarshal([]byte(evtstr), evt)
-		payloads[i] = encodeNson(evt)
+	for i := 0; i < len(events)/8; i++ {
+		envelopes = append(envelopes, []byte(`["OK", "8c59239319637f97e007dad0d681e65ce35b1ace333b629e2d33f9465c132608", true]`))
 	}
-	return payloads
-}
-
-func loadEnvelopes() []string {
-	events := loadEventsNson()
-	envelopes := make([]string, len(events))
-	for i, evtstr := range events {
-		envelopes[i] = fmt.Sprintf(`["EVENT","_",%s]`, evtstr)
+	for i := 0; i < len(events)/8; i++ {
+		envelopes = append(envelopes, []byte(`["OK", "8c59239319637f97e007dad0d681e65ce35b1ace333b629e2d33f9465c132608", false, "askjdbkasjbdskajbd"]`))
+	}
+	for i := range envelopes {
+		j := rand.Intn(i + 1)
+		envelopes[i], envelopes[j] = envelopes[j], envelopes[i]
 	}
 	return envelopes
 }
